@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  redis:
+    image: redis
+    ports:
+      - "56379:6379"
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: mono
+      POSTGRES_PASSWORD: sigma
+      POSTGRES_DB: MonoChat
+    ports:
+      - "5432:5434"
