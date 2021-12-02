@@ -7,17 +7,13 @@ export interface dataconnection {
 
 class database_connection {
   constructor(requestData: any) {
-    console.log(requestData);
+    console.log("recieved a request");
   }
 
-  test() {
+  async test() {
     let search = "Jeff";
 
-    // server.SignUp(testacc).catch((e) => {
-    //   throw e;
-    // });
-
-    let matches = database.UserSearch(search).catch((e) => {
+    let matches = await database.UserSearch(search).catch((e) => {
       throw e;
     });
     return matches;

@@ -12,12 +12,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SignUp = exports.UserSearch = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
-function UserSearch(Search) {
+function UserSearch(search) {
     return __awaiter(this, void 0, void 0, function* () {
         const UserMatches = yield prisma.user.findMany({
             where: {
                 name: {
-                    contains: Search,
+                    contains: search,
                 },
             },
             // include: {
@@ -40,4 +40,5 @@ function SignUp(UserInfo) {
     });
 }
 exports.SignUp = SignUp;
+// (async () => await UserSearch("something"))() Wyatt wrote this
 //# sourceMappingURL=prisma.js.map

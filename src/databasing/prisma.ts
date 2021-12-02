@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { mainModule } from "process";
 const prisma = new PrismaClient();
 
 export interface User {
@@ -7,11 +8,11 @@ export interface User {
   password: string;
 }
 
-export async function UserSearch(Search: string) {
+export async function UserSearch(search: string) {
   const UserMatches = await prisma.user.findMany({
     where: {
       name: {
-        contains: Search,
+        contains: search,
       },
     },
     // include: {
@@ -30,3 +31,5 @@ export async function SignUp(UserInfo: User) {
     },
   });
 }
+
+// (async () => await UserSearch("something"))() Wyatt wrote this
