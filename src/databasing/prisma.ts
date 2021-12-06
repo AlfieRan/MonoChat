@@ -15,9 +15,10 @@ export async function UserSearch(search: string) {
         contains: search,
       },
     },
-    // include: {
-    //   author: true, // Return all fields
-    // },
+    select: {
+      id: true,
+      name: true,
+    },
   });
   return UserMatches;
 }

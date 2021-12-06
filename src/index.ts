@@ -19,9 +19,13 @@ api.get("/search", async function (req: any, res: any) {
   let data = {
     type: 0,
   };
-
   const connection = new database_connection(data);
-  let results = await connection.test();
+  let results;
+  if (req.query.q != "") {
+    results = await connection.Search(req.query.q);
+  } else {
+    results = [""];
+  }
 
   // testing stuff - get rid of when done with
   const testData: Service<any> = {
@@ -29,8 +33,6 @@ api.get("/search", async function (req: any, res: any) {
     payload: results,
   };
   // testing end
-
-  console.log(testData);
   res.send(testData);
 });
 

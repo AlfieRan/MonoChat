@@ -20,9 +20,10 @@ function UserSearch(search) {
                     contains: search,
                 },
             },
-            // include: {
-            //   author: true, // Return all fields
-            // },
+            select: {
+                id: true,
+                name: true,
+            },
         });
         return UserMatches;
     });

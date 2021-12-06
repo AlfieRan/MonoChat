@@ -31,14 +31,19 @@ api.get("/search", function (req, res) {
             type: 0,
         };
         const connection = new interfacing_1.default(data);
-        let results = yield connection.test();
+        let results;
+        if (req.query.q != "") {
+            results = yield connection.Search(req.query.q);
+        }
+        else {
+            results = [""];
+        }
         // testing stuff - get rid of when done with
         const testData = {
             status: "loaded",
             payload: results,
         };
         // testing end
-        console.log(testData);
         res.send(testData);
     });
 });
