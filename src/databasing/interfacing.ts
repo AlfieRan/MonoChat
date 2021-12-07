@@ -1,16 +1,8 @@
 import { prisma } from ".prisma/client";
 // import * as database from "./prisma";
-import { UserSearch } from "./prisma";
-
-export interface dataconnection {
-  type: number;
-}
+import { UserSearch, UserInfo, SignUp, User } from "./prisma";
 
 class database_connection {
-  constructor(requestData: any) {
-    console.log("recieved a request");
-  }
-
   async Search(request: string) {
     let matches = await UserSearch(request).catch((e) => {
       throw e;
@@ -18,13 +10,20 @@ class database_connection {
     return matches;
   }
 
-  async test() {
-    let search = "Jeff";
-
-    let matches = await UserSearch(search).catch((e) => {
+  async GetUserInfo(user: string) {
+    let Info = await UserInfo(user).catch((e) => {
       throw e;
     });
-    return matches;
+    return Info;
+  }
+
+  async SignUp(name: string, email: string, password: string) {
+    const Info: User = {
+      name: name,
+      email: email,
+      password: password,
+    };
+    SignUp(Info);
   }
 }
 

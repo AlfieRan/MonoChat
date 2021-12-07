@@ -22,29 +22,46 @@ const port = process.env.SERVER_PORT;
 api.use((0, cors_1.default)());
 // define a route handler for the default home page
 api.get("/", (req, res) => {
-    console.log(req.url);
-    res.send("Hello world!");
+    res.send("This is the MonoChat Api, if you're not a dev go away!");
 });
 api.get("/search", function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        let data = {
-            type: 0,
-        };
-        const connection = new interfacing_1.default(data);
+        const connection = new interfacing_1.default();
         let results;
-        if (req.query.q != "") {
-            results = yield connection.Search(req.query.q);
+        if (req.query.q != null && req.query.q != "") {
+            results = yield connection.Search(req.query.q.toLowerCase().replaceAll("%20", " "));
         }
         else {
             results = [""];
         }
-        // testing stuff - get rid of when done with
-        const testData = {
+        const returnData = {
             status: "loaded",
             payload: results,
         };
-        // testing end
-        res.send(testData);
+        res.send(returnData);
+    });
+});
+api.get("/user", function (req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const connection = new interfacing_1.default();
+        let results;
+        if (req.query.q != null) {
+            results = yield connection.GetUserInfo(req.query.q);
+        }
+        else {
+            results = [""];
+        }
+        const returnData = {
+            status: "loaded",
+            payload: results,
+        };
+        res.send(returnData);
+    });
+});
+api.get("/signup", function (req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const connection = new interfacing_1.default();
+        res.send("this hasn't been done yet");
     });
 });
 // start the Express server

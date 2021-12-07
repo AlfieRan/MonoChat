@@ -12,9 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // import * as database from "./prisma";
 const prisma_1 = require("./prisma");
 class database_connection {
-    constructor(requestData) {
-        console.log("recieved a request");
-    }
     Search(request) {
         return __awaiter(this, void 0, void 0, function* () {
             let matches = yield (0, prisma_1.UserSearch)(request).catch((e) => {
@@ -23,13 +20,22 @@ class database_connection {
             return matches;
         });
     }
-    test() {
+    GetUserInfo(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            let search = "Jeff";
-            let matches = yield (0, prisma_1.UserSearch)(search).catch((e) => {
+            let Info = yield (0, prisma_1.UserInfo)(user).catch((e) => {
                 throw e;
             });
-            return matches;
+            return Info;
+        });
+    }
+    SignUp(name, email, password) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const Info = {
+                name: name,
+                email: email,
+                password: password,
+            };
+            (0, prisma_1.SignUp)(Info);
         });
     }
 }

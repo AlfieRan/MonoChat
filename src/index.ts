@@ -11,29 +11,48 @@ const port = process.env.SERVER_PORT;
 api.use(cors());
 // define a route handler for the default home page
 api.get("/", (req: any, res: any) => {
-  console.log(req.url);
-  res.send("Hello world!");
+  res.send("This is the MonoChat Api, if you're not a dev go away!");
 });
 
 api.get("/search", async function (req: any, res: any) {
-  let data = {
-    type: 0,
-  };
-  const connection = new database_connection(data);
+  const connection = new database_connection();
   let results;
-  if (req.query.q != "") {
-    results = await connection.Search(req.query.q);
+  if (req.query.q != null && req.query.q != "") {
+    results = await connection.Search(
+      req.query.q.toLowerCase().replaceAll("%20", " ")
+    );
   } else {
     results = [""];
   }
 
-  // testing stuff - get rid of when done with
-  const testData: Service<any> = {
+  const returnData: Service<any> = {
     status: "loaded",
     payload: results,
   };
-  // testing end
-  res.send(testData);
+
+  res.send(returnData);
+});
+
+api.get("/user", async function (req: any, res: any) {
+  const connection = new database_connection();
+  let results;
+  if (req.query.q != null) {
+    results = await connection.GetUserInfo(req.query.q);
+  } else {
+    results = [""];
+  }
+
+  const returnData: Service<any> = {
+    status: "loaded",
+    payload: results,
+  };
+
+  res.send(returnData);
+});
+
+api.get("/signup", async function (req: any, res: any) {
+  const connection = new database_connection();
+  res.send("this hasn't been done yet");
 });
 
 // start the Express server

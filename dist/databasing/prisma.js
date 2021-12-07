@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SignUp = exports.UserSearch = void 0;
+exports.SignUp = exports.UserInfo = exports.UserSearch = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 function UserSearch(search) {
@@ -29,6 +29,20 @@ function UserSearch(search) {
     });
 }
 exports.UserSearch = UserSearch;
+function UserInfo(reqid) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const UserInfo = yield prisma.user.findUnique({
+            where: {
+                id: reqid,
+            },
+            select: {
+                name: true,
+            },
+        });
+        return UserInfo;
+    });
+}
+exports.UserInfo = UserInfo;
 function SignUp(UserInfo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield prisma.user.create({
@@ -36,6 +50,8 @@ function SignUp(UserInfo) {
                 name: UserInfo.name,
                 email: UserInfo.email,
                 Password: UserInfo.password,
+                Description: null,
+                Nationality: null,
             },
         });
     });

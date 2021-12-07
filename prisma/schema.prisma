@@ -13,6 +13,8 @@ model User {
   createdAt DateTime  @default(now())
   name      String
   email     String    @unique
+  Description String
+  Nationality String
   Password  String
   ChatsIds  String[]
   FriendIds String[]
