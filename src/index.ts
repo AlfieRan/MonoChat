@@ -52,6 +52,7 @@ api.get("/user", async function (req: any, res: any) {
 
 api.get("/signup", async function (req: any, res: any) {
   const connection = new database_connection();
+  console.log(JSON.parse(req.body));
   res.send("this hasn't been done yet");
 });
 

@@ -61,6 +61,7 @@ api.get("/user", function (req, res) {
 api.get("/signup", function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const connection = new interfacing_1.default();
+        console.log(JSON.parse(req.body));
         res.send("this hasn't been done yet");
     });
 });
