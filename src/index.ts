@@ -9,12 +9,13 @@ dotenv.config();
 const api = express();
 const port = process.env.SERVER_PORT;
 api.use(cors());
+api.use(express.json()); // for parsing application/json
 // define a route handler for the default home page
 api.get("/", (req: any, res: any) => {
   res.send("This is the MonoChat Api, if you're not a dev go away!");
 });
 
-api.get("/search", async function (req: any, res: any) {
+api.get("/search", async function(req: any, res: any) {
   const connection = new database_connection();
   let results;
   if (req.query.q != null && req.query.q != "") {
@@ -27,13 +28,13 @@ api.get("/search", async function (req: any, res: any) {
 
   const returnData: Service<any> = {
     status: "loaded",
-    payload: results,
+    payload: results
   };
 
   res.send(returnData);
 });
 
-api.get("/user", async function (req: any, res: any) {
+api.get("/user", async function(req: any, res: any) {
   const connection = new database_connection();
   let results;
   if (req.query.q != null) {
@@ -44,16 +45,27 @@ api.get("/user", async function (req: any, res: any) {
 
   const returnData: Service<any> = {
     status: "loaded",
-    payload: results,
+    payload: results
   };
 
   res.send(returnData);
 });
 
-api.get("/signup", async function (req: any, res: any) {
-  const connection = new database_connection();
-  console.log(JSON.parse(req.body));
-  res.send("this hasn't been done yet");
+api.post("/signup", async function(req: any, res: any) {
+  if (req.body === undefined || req.body === null) {
+    res.send({ successful: false, error: "Body Undefined" });
+  } else {
+    let SignUpData = req.body;
+    if (
+      SignUpData.email.split("@")[0].length > 1 &&
+      SignUpData.email.split("@")[1].includes(".") &&
+      SignUpData.password === SignUpData.passwordCheck
+    ) {
+      res.send({ successful: true });
+    } else {
+      res.send({ successful: false, error: "Validation Error" });
+    }
+  }
 });
 
 // start the Express server
