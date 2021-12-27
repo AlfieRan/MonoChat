@@ -68,8 +68,17 @@ api.post("/signup", function (req, res) {
             let SignUpData = req.body;
             if (SignUpData.email.split("@")[0].length > 1 &&
                 SignUpData.email.split("@")[1].includes(".") &&
-                SignUpData.password === SignUpData.passwordCheck) {
-                res.send({ successful: true });
+                SignUpData.password === SignUpData.passwordCheck
+            //    Do other checks here, this is just temporary
+            ) {
+                const connection = new interfacing_1.default();
+                let data = yield connection.UserSignUp(SignUpData);
+                if (data != false) {
+                    res.send({ successful: true, id: data });
+                }
+                else {
+                    res.send({ successful: false, error: "Databasing error" });
+                }
             }
             else {
                 res.send({ successful: false, error: "Validation Error" });

@@ -60,8 +60,15 @@ api.post("/signup", async function(req: any, res: any) {
       SignUpData.email.split("@")[0].length > 1 &&
       SignUpData.email.split("@")[1].includes(".") &&
       SignUpData.password === SignUpData.passwordCheck
+      //    Do other checks here, this is just temporary
     ) {
-      res.send({ successful: true });
+      const connection = new database_connection();
+      let data = await connection.UserSignUp(SignUpData);
+      if (data != false) {
+        res.send({ successful: true, id: data });
+      } else {
+        res.send({ successful: false, error: "Databasing error" });
+      }
     } else {
       res.send({ successful: false, error: "Validation Error" });
     }

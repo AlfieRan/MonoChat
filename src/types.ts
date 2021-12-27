@@ -21,3 +21,17 @@ export type Service<T> =
   | ServiceLoading
   | ServiceLoaded<T>
   | ServiceError;
+
+export type BaseUserType = {
+  firstname: string;
+  surname: string;
+  email: string;
+  password: string;
+  passwordCheck: string;
+};
+
+export type UserType = {
+  name: string;
+  email: string;
+  password: string;
+};

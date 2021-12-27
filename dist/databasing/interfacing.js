@@ -14,7 +14,7 @@ const prisma_1 = require("./prisma");
 class database_connection {
     Search(request) {
         return __awaiter(this, void 0, void 0, function* () {
-            let matches = yield (0, prisma_1.UserSearch)(request).catch((e) => {
+            let matches = yield (0, prisma_1.UserSearch)(request).catch(e => {
                 throw e;
             });
             return matches;
@@ -22,20 +22,26 @@ class database_connection {
     }
     GetUserInfo(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            let Info = yield (0, prisma_1.UserInfo)(user).catch((e) => {
+            let Info = yield (0, prisma_1.UserInfo)(user).catch(e => {
                 throw e;
             });
             return Info;
         });
     }
-    SignUp(name, email, password) {
+    UserSignUp(userInfo) {
         return __awaiter(this, void 0, void 0, function* () {
-            const Info = {
-                name: name,
-                email: email,
-                password: password,
-            };
-            (0, prisma_1.SignUp)(Info);
+            if (userInfo.password === userInfo.passwordCheck) {
+                let UserData = {
+                    name: userInfo.firstname + " " + userInfo.surname,
+                    email: userInfo.email,
+                    password: userInfo.password
+                };
+                let uid = yield (0, prisma_1.SignUp)(UserData);
+                return uid;
+            }
+            else {
+                return false;
+            }
         });
     }
 }

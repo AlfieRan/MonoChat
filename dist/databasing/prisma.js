@@ -17,13 +17,13 @@ function UserSearch(search) {
         const UserMatches = yield prisma.user.findMany({
             where: {
                 name: {
-                    contains: search,
-                },
+                    contains: search
+                }
             },
             select: {
                 id: true,
-                name: true,
-            },
+                name: true
+            }
         });
         return UserMatches;
     });
@@ -33,11 +33,11 @@ function UserInfo(reqid) {
     return __awaiter(this, void 0, void 0, function* () {
         const UserInfo = yield prisma.user.findUnique({
             where: {
-                id: reqid,
+                id: reqid
             },
             select: {
-                name: true,
-            },
+                name: true
+            }
         });
         return UserInfo;
     });
@@ -50,10 +50,17 @@ function SignUp(UserInfo) {
                 name: UserInfo.name,
                 email: UserInfo.email,
                 Password: UserInfo.password,
-                Description: null,
-                Nationality: null,
-            },
+                Description: "",
+                Nationality: ""
+            }
         });
+        const UserID = yield prisma.user.findUnique({
+            where: {
+                email: UserInfo.email
+            },
+            select: { id: true }
+        });
+        return UserID;
     });
 }
 exports.SignUp = SignUp;
