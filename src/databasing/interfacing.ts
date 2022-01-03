@@ -1,6 +1,6 @@
 import { prisma } from ".prisma/client";
 // import * as database from "./prisma";
-import { UserSearch, UserInfo, SignUp } from "./prisma";
+import { UserSearch, UserInfo, SignUp, DoesUserExist_Email } from "./prisma";
 import { BaseUserType, UserType } from "../types";
 
 class database_connection {
@@ -16,6 +16,13 @@ class database_connection {
       throw e;
     });
     return Info;
+  }
+
+  async DoesUserExist(email: string) {
+    let result = await DoesUserExist_Email(email).catch(e => {
+      throw e;
+    });
+    return result;
   }
 
   async UserSignUp(userInfo: BaseUserType) {

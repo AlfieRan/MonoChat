@@ -59,33 +59,42 @@ api.get("/user", function (req, res) {
         res.send(returnData);
     });
 });
-api.post("/signup", function (req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (req.body === undefined || req.body === null) {
-            res.send({ successful: false, error: "Body Undefined" });
-        }
-        else {
-            let SignUpData = req.body;
-            if (SignUpData.email.split("@")[0].length > 1 &&
-                SignUpData.email.split("@")[1].includes(".") &&
-                SignUpData.password === SignUpData.passwordCheck
-            //    Do other checks here, this is just temporary
-            ) {
-                const connection = new interfacing_1.default();
-                let data = yield connection.UserSignUp(SignUpData);
-                if (data != false) {
-                    res.send({ successful: true, id: data });
-                }
-                else {
-                    res.send({ successful: false, error: "Databasing error" });
-                }
+api.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (req.body === undefined || req.body === null) {
+        res.send({ successful: false, error: "Body Undefined" });
+    }
+    else {
+        let SignUpData = req.body;
+        if (SignUpData.email.split("@")[0].length > 1 &&
+            SignUpData.email.split("@")[1].includes(".") &&
+            SignUpData.password === SignUpData.passwordCheck
+        //    Do other checks here, this is just temporary
+        ) {
+            const connection = new interfacing_1.default();
+            let data = yield connection.UserSignUp(SignUpData);
+            if (data != false) {
+                res.send({ successful: true, id: data });
             }
             else {
-                res.send({ successful: false, error: "Validation Error" });
+                res.send({ successful: false, error: "Databasing error" });
             }
         }
-    });
-});
+        else {
+            res.send({ successful: false, error: "Validation Error" });
+        }
+    }
+}));
+api.get("/users/check", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (req.query.email === undefined || req.query.email === null) {
+        res.send({ successful: false, error: "No Email Supplied." });
+    }
+    else {
+        const ReqEmail = req.query.email;
+        const connection = new interfacing_1.default();
+        let UserExists = yield connection.DoesUserExist(ReqEmail);
+        res.send({ successful: true, exists: UserExists });
+    }
+}));
 // start the Express server
 api.listen(port, () => {
     console.log(`server started at http://localhost:${port}`);

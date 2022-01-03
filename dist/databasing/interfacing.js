@@ -28,6 +28,14 @@ class database_connection {
             return Info;
         });
     }
+    DoesUserExist(email) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let result = yield (0, prisma_1.DoesUserExist_Email)(email).catch(e => {
+                throw e;
+            });
+            return result;
+        });
+    }
     UserSignUp(userInfo) {
         return __awaiter(this, void 0, void 0, function* () {
             if (userInfo.password === userInfo.passwordCheck) {

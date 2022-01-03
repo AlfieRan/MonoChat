@@ -51,7 +51,7 @@ api.get("/user", async function(req: any, res: any) {
   res.send(returnData);
 });
 
-api.post("/signup", async function(req: any, res: any) {
+api.post("/signup", async (req: any, res: any) => {
   if (req.body === undefined || req.body === null) {
     res.send({ successful: false, error: "Body Undefined" });
   } else {
@@ -72,6 +72,18 @@ api.post("/signup", async function(req: any, res: any) {
     } else {
       res.send({ successful: false, error: "Validation Error" });
     }
+  }
+});
+
+api.get("/users/check", async (req: any, res: any) => {
+  if (req.query.email === undefined || req.query.email === null) {
+    res.send({ successful: false, error: "No Email Supplied." });
+  } else {
+    const ReqEmail = req.query.email;
+    const connection = new database_connection();
+
+    let UserExists = await connection.DoesUserExist(ReqEmail);
+    res.send({ successful: true, exists: UserExists });
   }
 });
 

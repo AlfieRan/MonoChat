@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SignUp = exports.UserInfo = exports.UserSearch = void 0;
+exports.SignUp = exports.DoesUserExist_Email = exports.UserInfo = exports.UserSearch = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 function UserSearch(search) {
@@ -43,6 +43,18 @@ function UserInfo(reqid) {
     });
 }
 exports.UserInfo = UserInfo;
+function DoesUserExist_Email(email) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const matchCount = yield prisma.user.count({ where: { email: email } });
+        if (matchCount > 0) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    });
+}
+exports.DoesUserExist_Email = DoesUserExist_Email;
 function SignUp(UserInfo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield prisma.user.create({

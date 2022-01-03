@@ -30,6 +30,15 @@ export async function UserInfo(reqid: string) {
   return UserInfo;
 }
 
+export async function DoesUserExist_Email(email: string) {
+  const matchCount = await prisma.user.count({ where: { email: email } });
+  if (matchCount > 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 export async function SignUp(UserInfo: UserType) {
   await prisma.user.create({
     data: {
