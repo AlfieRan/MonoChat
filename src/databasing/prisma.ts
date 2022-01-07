@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
-import { UserType } from "../types";
+import { UserType, LoginType } from "../types";
+import { hash, verify } from "argon2";
 import { mainModule } from "process";
 const prisma = new PrismaClient();
 
@@ -39,12 +40,27 @@ export async function DoesUserExist_Email(email: string) {
   }
 }
 
+export async function VerifyLoginDetails(LoginInfo: LoginType) {
+  const usrDetails = await prisma.user.findUnique({
+    where: {
+      email: LoginInfo.email
+    }
+  });
+  if (await verify(usrDetails.Password, LoginInfo.password)) {
+    // TODO do some funky login info retaining shit, rn it doesn't do anything lol
+    return true;
+  } else {
+    return false;
+  }
+}
+
 export async function SignUp(UserInfo: UserType) {
+  let hashedPass = await hash(UserInfo.password);
   await prisma.user.create({
     data: {
       name: UserInfo.name,
       email: UserInfo.email,
-      Password: UserInfo.password,
+      Password: hashedPass,
       Description: "",
       Nationality: ""
     }
