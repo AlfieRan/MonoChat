@@ -9,6 +9,9 @@
     "start": "node .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "engines": {
+    "node": "17.0.1"
+  },
   "repository": "https://github.com/AlfieRan/MonoChat.git",
   "author": "AlfieRan <89932058+AlfieRan@users.noreply.github.com>",
   "license": "MIT",

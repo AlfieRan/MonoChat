@@ -9,20 +9,27 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SignUp = exports.DoesUserExist_Email = exports.UserInfo = exports.UserSearch = void 0;
+exports.SignUp = exports.VerifyLoginDetails = exports.DoesUserExist_Email = exports.UserInfo = exports.UserSearch = void 0;
 const client_1 = require("@prisma/client");
+const argon2_1 = require("argon2");
 const prisma = new client_1.PrismaClient();
 function UserSearch(search) {
     return __awaiter(this, void 0, void 0, function* () {
+        //TODO fix this
+        const name = search.split(" ");
         const UserMatches = yield prisma.user.findMany({
             where: {
-                name: {
-                    contains: search
+                firstname: {
+                    contains: name[0]
+                },
+                surname: {
+                    contains: name[1]
                 }
             },
             select: {
                 id: true,
-                name: true
+                firstname: true,
+                surname: true
             }
         });
         return UserMatches;
@@ -36,7 +43,8 @@ function UserInfo(reqid) {
                 id: reqid
             },
             select: {
-                name: true
+                firstname: true,
+                surname: true
             }
         });
         return UserInfo;
@@ -55,15 +63,34 @@ function DoesUserExist_Email(email) {
     });
 }
 exports.DoesUserExist_Email = DoesUserExist_Email;
+function VerifyLoginDetails(LoginInfo) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const usrDetails = yield prisma.user.findUnique({
+            where: {
+                email: LoginInfo.email
+            }
+        });
+        if (yield (0, argon2_1.verify)(usrDetails.password, LoginInfo.password)) {
+            // TODO do some funky login info retaining shit, rn it doesn't do anything lol
+            return true;
+        }
+        else {
+            return false;
+        }
+    });
+}
+exports.VerifyLoginDetails = VerifyLoginDetails;
 function SignUp(UserInfo) {
     return __awaiter(this, void 0, void 0, function* () {
+        let hashedPass = yield (0, argon2_1.hash)(UserInfo.password);
         yield prisma.user.create({
             data: {
-                name: UserInfo.name,
+                firstname: UserInfo.firstname,
+                surname: UserInfo.surname,
                 email: UserInfo.email,
-                Password: UserInfo.password,
-                Description: "",
-                Nationality: ""
+                password: hashedPass,
+                description: "",
+                nationality: ""
             }
         });
         const UserID = yield prisma.user.findUnique({

@@ -28,7 +28,8 @@ class database_connection {
   async UserSignUp(userInfo: BaseUserType) {
     if (userInfo.password === userInfo.passwordCheck) {
       let UserData: UserType = {
-        name: userInfo.firstname + " " + userInfo.surname,
+        firstname: userInfo.firstname,
+        surname: userInfo.surname,
         email: userInfo.email,
         password: userInfo.password
       };

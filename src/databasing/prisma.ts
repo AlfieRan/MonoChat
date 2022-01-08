@@ -5,15 +5,21 @@ import { mainModule } from "process";
 const prisma = new PrismaClient();
 
 export async function UserSearch(search: string) {
+  //TODO fix this
+  const name: Array<string> = search.split(" ");
   const UserMatches = await prisma.user.findMany({
     where: {
-      name: {
-        contains: search
+      firstname: {
+        contains: name[0]
+      },
+      surname: {
+        contains: name[1]
       }
     },
     select: {
       id: true,
-      name: true
+      firstname: true,
+      surname: true
     }
   });
   return UserMatches;
@@ -25,7 +31,8 @@ export async function UserInfo(reqid: string) {
       id: reqid
     },
     select: {
-      name: true
+      firstname: true,
+      surname: true
     }
   });
   return UserInfo;
@@ -46,7 +53,7 @@ export async function VerifyLoginDetails(LoginInfo: LoginType) {
       email: LoginInfo.email
     }
   });
-  if (await verify(usrDetails.Password, LoginInfo.password)) {
+  if (await verify(usrDetails.password, LoginInfo.password)) {
     // TODO do some funky login info retaining shit, rn it doesn't do anything lol
     return true;
   } else {
@@ -58,11 +65,12 @@ export async function SignUp(UserInfo: UserType) {
   let hashedPass = await hash(UserInfo.password);
   await prisma.user.create({
     data: {
-      name: UserInfo.name,
+      firstname: UserInfo.firstname,
+      surname: UserInfo.surname,
       email: UserInfo.email,
-      Password: hashedPass,
-      Description: "",
-      Nationality: ""
+      password: hashedPass,
+      description: "",
+      nationality: ""
     }
   });
 

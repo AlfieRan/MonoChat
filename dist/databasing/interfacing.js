@@ -40,7 +40,8 @@ class database_connection {
         return __awaiter(this, void 0, void 0, function* () {
             if (userInfo.password === userInfo.passwordCheck) {
                 let UserData = {
-                    name: userInfo.firstname + " " + userInfo.surname,
+                    firstname: userInfo.firstname,
+                    surname: userInfo.surname,
                     email: userInfo.email,
                     password: userInfo.password
                 };

@@ -11,23 +11,24 @@ datasource db {
 model User {
   id        String    @id @default(uuid())
   createdAt DateTime  @default(now())
-  name      String
+  firstname String
+  surname   String
   email     String    @unique
-  Description String
-  Nationality String
-  Password  String
-  ChatsIds  String[]
-  FriendIds String[]
-  Messages  Message[]
+  description String
+  nationality String
+  password  String
+  chatids  String[]
+  friendids String[]
+  messages  Message[]
 }
 
 model Chat {
   id        String    @id @default(uuid())
   createdAt DateTime  @default(now())
   memberIds String[]
-  Messages  Message[]
-  ChatName String
-  isPublic Boolean
+  messages  Message[]
+  chatname String
+  ispublic Boolean
 }
 
 model Message {
@@ -35,7 +36,7 @@ model Message {
   content   String
   createdAt DateTime @default(now())
   sender    User     @relation(fields: [userId], references: [id])
-  Chat      Chat?    @relation(fields: [chatId], references: [id])
+  chat      Chat?    @relation(fields: [chatId], references: [id])
   chatId    String?
   userId    String
 }

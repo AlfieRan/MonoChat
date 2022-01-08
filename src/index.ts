@@ -7,7 +7,9 @@ import { Service } from "./types";
 dotenv.config();
 
 const api = express();
-const port = process.env.SERVER_PORT;
+
+const port = process.env.PORT;
+
 api.use(cors());
 api.use(express.json()); // for parsing application/json
 // define a route handler for the default home page
@@ -88,6 +90,6 @@ api.get("/users/check", async (req: any, res: any) => {
 });
 
 // start the Express server
-api.listen(port, () => {
+api.listen(port || 8888, () => {
   console.log(`server started at http://localhost:${port}`);
 });

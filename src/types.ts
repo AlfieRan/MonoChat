@@ -31,7 +31,8 @@ export type BaseUserType = {
 };
 
 export type UserType = {
-  name: string;
+  firstname: string;
+  surname: string;
   email: string;
   password: string;
 };
