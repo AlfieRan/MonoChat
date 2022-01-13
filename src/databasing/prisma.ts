@@ -10,10 +10,12 @@ export async function UserSearch(search: string) {
   const UserMatches = await prisma.user.findMany({
     where: {
       firstname: {
-        contains: name[0]
+        contains: name[0],
+        mode: "insensitive"
       },
       surname: {
-        contains: name[1]
+        contains: name[1],
+        mode: "insensitive"
       }
     },
     select: {
