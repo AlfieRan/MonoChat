@@ -1,7 +1,13 @@
 import { prisma } from ".prisma/client";
 // import * as database from "./prisma";
-import { UserSearch, UserInfo, SignUp, DoesUserExist_Email } from "./prisma";
-import { BaseUserType, UserType } from "../types";
+import {
+  UserSearch,
+  UserInfo,
+  SignUp,
+  DoesUserExist_Email,
+  VerifyLoginDetails
+} from "./prisma";
+import { BaseUserType, UserType, LoginType } from "../types";
 
 class database_connection {
   async Search(request: string) {
@@ -28,13 +34,20 @@ class database_connection {
   async UserSignUp(userInfo: BaseUserType) {
     if (userInfo.password === userInfo.passwordCheck) {
       let UserData: UserType = {
-        firstname: userInfo.firstname,
-        surname: userInfo.surname,
+        name: userInfo.name,
         email: userInfo.email,
         password: userInfo.password
       };
       let uid = await SignUp(UserData);
       return uid;
+    } else {
+      return false;
+    }
+  }
+
+  async UserSignIn(userInfo: LoginType) {
+    if (await VerifyLoginDetails(userInfo)) {
+      return true;
     } else {
       return false;
     }

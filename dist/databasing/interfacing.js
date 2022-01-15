@@ -40,13 +40,22 @@ class database_connection {
         return __awaiter(this, void 0, void 0, function* () {
             if (userInfo.password === userInfo.passwordCheck) {
                 let UserData = {
-                    firstname: userInfo.firstname,
-                    surname: userInfo.surname,
+                    name: userInfo.name,
                     email: userInfo.email,
                     password: userInfo.password
                 };
                 let uid = yield (0, prisma_1.SignUp)(UserData);
                 return uid;
+            }
+            else {
+                return false;
+            }
+        });
+    }
+    UserSignIn(userInfo) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (yield (0, prisma_1.VerifyLoginDetails)(userInfo)) {
+                return true;
             }
             else {
                 return false;

@@ -11,8 +11,7 @@ datasource db {
 model User {
   id        String    @id @default(uuid())
   createdAt DateTime  @default(now())
-  firstname  String
-  surname  String
+  name  String
   email     String    @unique
   description String
   nationality String

@@ -6,22 +6,17 @@ const prisma = new PrismaClient();
 
 export async function UserSearch(search: string) {
   //TODO fix this
-  const name: Array<string> = search.split(" ");
+  const name: string = search;
   const UserMatches = await prisma.user.findMany({
     where: {
-      firstname: {
-        contains: name[0],
-        mode: "insensitive"
-      },
-      surname: {
-        contains: name[1],
+      name: {
+        contains: name,
         mode: "insensitive"
       }
     },
     select: {
       id: true,
-      firstname: true,
-      surname: true
+      name: true
     }
   });
   return UserMatches;
@@ -33,8 +28,7 @@ export async function UserInfo(reqid: string) {
       id: reqid
     },
     select: {
-      firstname: true,
-      surname: true
+      name: true
     }
   });
   return UserInfo;
@@ -67,8 +61,7 @@ export async function SignUp(UserInfo: UserType) {
   let hashedPass = await hash(UserInfo.password);
   await prisma.user.create({
     data: {
-      firstname: UserInfo.firstname,
-      surname: UserInfo.surname,
+      name: UserInfo.name,
       email: UserInfo.email,
       password: hashedPass,
       description: "",

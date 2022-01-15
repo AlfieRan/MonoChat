@@ -1,7 +1,3 @@
-export interface Testing {
-  Succesful: boolean;
-}
-
 interface ServiceInit {
   status: "init";
 }
@@ -23,16 +19,14 @@ export type Service<T> =
   | ServiceError;
 
 export type BaseUserType = {
-  firstname: string;
-  surname: string;
+  name: string;
   email: string;
   password: string;
   passwordCheck: string;
 };
 
 export type UserType = {
-  firstname: string;
-  surname: string;
+  name: string;
   email: string;
   password: string;
 };
@@ -41,3 +35,7 @@ export type LoginType = {
   email: string;
   password: string;
 };
+
+export function isBaseUser(object: any): object is BaseUserType {
+  return true;
+}

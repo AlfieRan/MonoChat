@@ -16,20 +16,17 @@ const prisma = new client_1.PrismaClient();
 function UserSearch(search) {
     return __awaiter(this, void 0, void 0, function* () {
         //TODO fix this
-        const name = search.split(" ");
+        const name = search;
         const UserMatches = yield prisma.user.findMany({
             where: {
-                firstname: {
-                    contains: name[0]
-                },
-                surname: {
-                    contains: name[1]
+                name: {
+                    contains: name,
+                    mode: "insensitive"
                 }
             },
             select: {
                 id: true,
-                firstname: true,
-                surname: true
+                name: true
             }
         });
         return UserMatches;
@@ -43,8 +40,7 @@ function UserInfo(reqid) {
                 id: reqid
             },
             select: {
-                firstname: true,
-                surname: true
+                name: true
             }
         });
         return UserInfo;
@@ -85,8 +81,7 @@ function SignUp(UserInfo) {
         let hashedPass = yield (0, argon2_1.hash)(UserInfo.password);
         yield prisma.user.create({
             data: {
-                firstname: UserInfo.firstname,
-                surname: UserInfo.surname,
+                name: UserInfo.name,
                 email: UserInfo.email,
                 password: hashedPass,
                 description: "",
