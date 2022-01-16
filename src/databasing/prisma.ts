@@ -17,7 +17,8 @@ export async function UserSearch(search: string) {
     select: {
       id: true,
       name: true
-    }
+    },
+    take: 5
   });
   return UserMatches;
 }
