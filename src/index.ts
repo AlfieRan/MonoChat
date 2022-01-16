@@ -27,7 +27,12 @@ api.get("/search", async function(req: any, res: any) {
   try {
     const connection = new database_connection();
     let results;
-    if (req.query.q != null && req.query.q != "") {
+    if (
+      req.query.q != null &&
+      req.query.q != "" &&
+      req.query.q != " " &&
+      req.query.q != "%20"
+    ) {
       results = await connection.Search(
         req.query.q.toLowerCase().replaceAll("%20", " ")
       );
