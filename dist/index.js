@@ -31,7 +31,10 @@ api.get("/search", function (req, res) {
         try {
             const connection = new interfacing_1.default();
             let results;
-            if (req.query.q != null && req.query.q != "") {
+            if (req.query.q != null &&
+                req.query.q != "" &&
+                req.query.q != " " &&
+                req.query.q != "%20") {
                 results = yield connection.Search(req.query.q.toLowerCase().replaceAll("%20", " "));
             }
             else {
@@ -63,11 +66,20 @@ api.get("/user", function (req, res) {
             else {
                 results = [""];
             }
-            const returnData = {
-                status: "loaded",
-                payload: results
-            };
-            res.send(returnData);
+            if (results != null && results != [""]) {
+                const returnData = {
+                    successful: true,
+                    payload: results
+                };
+                res.send(returnData);
+            }
+            else {
+                const returnData = {
+                    successful: false,
+                    error: "no user found"
+                };
+                res.send(returnData);
+            }
         }
         catch (e) {
             res.send({ successful: false, error: e });

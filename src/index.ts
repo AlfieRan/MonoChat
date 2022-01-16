@@ -63,12 +63,19 @@ api.get("/user", async function(req: any, res: any) {
       results = [""];
     }
 
-    const returnData: Service<any> = {
-      status: "loaded",
-      payload: results
-    };
-
-    res.send(returnData);
+    if (results != null && results != [""]) {
+      const returnData = {
+        successful: true,
+        payload: results
+      };
+      res.send(returnData);
+    } else {
+      const returnData = {
+        successful: false,
+        error: "no user found"
+      };
+      res.send(returnData);
+    }
   } catch (e) {
     res.send({ successful: false, error: e });
   }
