@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SignUp = exports.VerifyLoginDetails = exports.DoesUserExist_Email = exports.UserInfo = exports.UserSearch = void 0;
+exports.isChatPublic = exports.sendMessage = exports.GetChatInfo = exports.GetChatMessages = exports.SignUp = exports.VerifyLoginDetails = exports.DoesUserExist_Email = exports.UserInfo = exports.UserSearch = void 0;
 const client_1 = require("@prisma/client");
 const argon2_1 = require("argon2");
 const prisma = new client_1.PrismaClient();
@@ -27,7 +27,8 @@ function UserSearch(search) {
             select: {
                 id: true,
                 name: true
-            }
+            },
+            take: 5
         });
         return UserMatches;
     });
@@ -79,7 +80,7 @@ exports.VerifyLoginDetails = VerifyLoginDetails;
 function SignUp(UserInfo) {
     return __awaiter(this, void 0, void 0, function* () {
         let hashedPass = yield (0, argon2_1.hash)(UserInfo.password);
-        yield prisma.user.create({
+        const NewUser = yield prisma.user.create({
             data: {
                 name: UserInfo.name,
                 email: UserInfo.email,
@@ -88,15 +89,76 @@ function SignUp(UserInfo) {
                 nationality: ""
             }
         });
-        const UserID = yield prisma.user.findUnique({
-            where: {
-                email: UserInfo.email
-            },
-            select: { id: true }
-        });
-        return UserID;
+        return NewUser;
     });
 }
 exports.SignUp = SignUp;
+function GetChatMessages(ChatId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const messages = yield prisma.chat.findUnique({
+            where: { id: ChatId },
+            select: {
+                messages: {
+                    orderBy: { createdAt: "desc" },
+                    select: { id: true, content: true, createdAt: true, userId: true },
+                    take: 50
+                }
+            }
+        });
+        return messages;
+    });
+}
+exports.GetChatMessages = GetChatMessages;
+function GetChatInfo(ChatId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const info = yield prisma.chat.findUnique({
+            where: { id: ChatId },
+            select: { chatname: true, memberIds: true }
+        });
+        return info;
+    });
+}
+exports.GetChatInfo = GetChatInfo;
+function sendMessage(ChatId, UserId, content) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield prisma.chat.update({
+                where: { id: ChatId },
+                data: {
+                    messages: {
+                        create: {
+                            content: content,
+                            sender: { connect: { id: UserId } }
+                        }
+                    }
+                }
+            });
+            return { successful: true };
+        }
+        catch (e) {
+            return { successful: false, error: e };
+        }
+    });
+}
+exports.sendMessage = sendMessage;
+function isChatPublic(ChatId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const isPublic = yield prisma.chat.findUnique({
+            where: {
+                id: ChatId
+            },
+            select: {
+                ispublic: true
+            }
+        });
+        if (isPublic.ispublic) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    });
+}
+exports.isChatPublic = isChatPublic;
 // (async () => await UserSearch("something"))() Wyatt wrote this
 //# sourceMappingURL=prisma.js.map

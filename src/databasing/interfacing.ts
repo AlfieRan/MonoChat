@@ -5,7 +5,10 @@ import {
   UserInfo,
   SignUp,
   DoesUserExist_Email,
-  VerifyLoginDetails
+  VerifyLoginDetails,
+  isChatPublic,
+  GetChatMessages,
+  GetChatInfo
 } from "./prisma";
 import { BaseUserType, UserType, LoginType } from "../types";
 
@@ -31,6 +34,24 @@ class database_connection {
     return result;
   }
 
+  async GetMessagesFromChat(ChatId: string) {
+    if (await isChatPublic(ChatId)) {
+      const messages = await GetChatMessages(ChatId);
+      return { successful: true, messages: messages };
+    } else {
+      return { successful: false, error: "Chat is not public" };
+    }
+  }
+
+  async CollectChatInfo(ChatId: string) {
+    const chatIsPublic = await isChatPublic(ChatId);
+    if (!chatIsPublic)
+      return { successful: false, error: "Chat is not public" };
+
+    const Info = await GetChatInfo(ChatId);
+    return { successful: true, info: Info };
+  }
+
   async UserSignUp(userInfo: BaseUserType) {
     if (userInfo.password === userInfo.passwordCheck) {
       let UserData: UserType = {
@@ -38,8 +59,8 @@ class database_connection {
         email: userInfo.email,
         password: userInfo.password
       };
-      let uid = await SignUp(UserData);
-      return uid;
+      let NewUserInfo = await SignUp(UserData);
+      return NewUserInfo.id;
     } else {
       return false;
     }

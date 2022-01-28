@@ -160,6 +160,41 @@ api.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res.send({ successful: false, error: e });
     }
 }));
+api.get("/chats/messages", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (req.query.id != undefined) {
+            const connection = new interfacing_1.default();
+            let messages = connection.GetMessagesFromChat(req.query.id);
+            res.send({ successful: true, messages: messages });
+        }
+        else {
+            res.send({ successful: false, error: "no id supplied" });
+        }
+    }
+    catch (e) {
+        res.send({ successful: false, error: e });
+    }
+}));
+api.get("/chats/info", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (req.query.id != undefined) {
+            const connection = new interfacing_1.default();
+            let results = yield connection.CollectChatInfo(req.query.id);
+            if (results.successful) {
+                res.send({ successful: true, info: results.info });
+            }
+            else {
+                res.send({ successful: false, error: results.error });
+            }
+        }
+        else {
+            res.send({ successful: false, error: "no id supplied" });
+        }
+    }
+    catch (e) {
+        res.send({ successful: false, error: e });
+    }
+}));
 // start the Express server
 api.listen(port || 8888, () => {
     console.log(`server started at http://localhost:${port}`);

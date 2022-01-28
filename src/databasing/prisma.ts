@@ -23,10 +23,10 @@ export async function UserSearch(search: string) {
   return UserMatches;
 }
 
-export async function UserInfo(reqid: string) {
+export async function UserInfo(usrId: string) {
   const UserInfo = await prisma.user.findUnique({
     where: {
-      id: reqid
+      id: usrId
     },
     select: {
       name: true
@@ -60,7 +60,7 @@ export async function VerifyLoginDetails(LoginInfo: LoginType) {
 
 export async function SignUp(UserInfo: UserType) {
   let hashedPass = await hash(UserInfo.password);
-  await prisma.user.create({
+  const NewUser = await prisma.user.create({
     data: {
       name: UserInfo.name,
       email: UserInfo.email,
@@ -70,14 +70,70 @@ export async function SignUp(UserInfo: UserType) {
     }
   });
 
-  const UserID = await prisma.user.findUnique({
-    where: {
-      email: UserInfo.email
-    },
-    select: { id: true }
+  return NewUser;
+}
+
+export async function GetChatMessages(ChatId: string) {
+  const messages = await prisma.chat.findUnique({
+    where: { id: ChatId },
+    select: {
+      messages: {
+        orderBy: { createdAt: "desc" },
+        select: { id: true, content: true, createdAt: true, userId: true },
+        take: 50
+      }
+    }
   });
 
-  return UserID;
+  return messages;
+}
+
+export async function GetChatInfo(ChatId: string) {
+  const info = await prisma.chat.findUnique({
+    where: { id: ChatId },
+    select: { chatname: true, memberIds: true }
+  });
+  return info;
+}
+
+export async function sendMessage(
+  ChatId: string,
+  UserId: string,
+  content: string
+) {
+  try {
+    await prisma.chat.update({
+      where: { id: ChatId },
+      data: {
+        messages: {
+          create: {
+            content: content,
+            sender: { connect: { id: UserId } }
+          }
+        }
+      }
+    });
+    return { successful: true };
+  } catch (e) {
+    return { successful: false, error: e };
+  }
+}
+
+export async function isChatPublic(ChatId: string) {
+  const isPublic = await prisma.chat.findUnique({
+    where: {
+      id: ChatId
+    },
+    select: {
+      ispublic: true
+    }
+  });
+
+  if (isPublic.ispublic) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 // (async () => await UserSearch("something"))() Wyatt wrote this

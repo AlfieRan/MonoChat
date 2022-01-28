@@ -150,6 +150,38 @@ api.post("/signin", async (req: any, res: any) => {
   }
 });
 
+api.get("/chats/messages", async (req: any, res: any) => {
+  try {
+    if (req.query.id != undefined) {
+      const connection = new database_connection();
+      let messages = connection.GetMessagesFromChat(req.query.id);
+      res.send({ successful: true, messages: messages });
+    } else {
+      res.send({ successful: false, error: "no id supplied" });
+    }
+  } catch (e) {
+    res.send({ successful: false, error: e });
+  }
+});
+
+api.get("/chats/info", async (req: any, res: any) => {
+  try {
+    if (req.query.id != undefined) {
+      const connection = new database_connection();
+      let results = await connection.CollectChatInfo(req.query.id); // hello
+      if (results.successful) {
+        res.send({ successful: true, info: results.info });
+      } else {
+        res.send({ successful: false, error: results.error });
+      }
+    } else {
+      res.send({ successful: false, error: "no id supplied" });
+    }
+  } catch (e) {
+    res.send({ successful: false, error: e });
+  }
+});
+
 // start the Express server
 api.listen(port || 8888, () => {
   console.log(`server started at http://localhost:${port}`);

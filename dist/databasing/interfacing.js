@@ -36,6 +36,26 @@ class database_connection {
             return result;
         });
     }
+    GetMessagesFromChat(ChatId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (yield (0, prisma_1.isChatPublic)(ChatId)) {
+                const messages = yield (0, prisma_1.GetChatMessages)(ChatId);
+                return { successful: true, messages: messages };
+            }
+            else {
+                return { successful: false, error: "Chat is not public" };
+            }
+        });
+    }
+    CollectChatInfo(ChatId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const chatIsPublic = yield (0, prisma_1.isChatPublic)(ChatId);
+            if (!chatIsPublic)
+                return { successful: false, error: "Chat is not public" };
+            const Info = yield (0, prisma_1.GetChatInfo)(ChatId);
+            return { successful: true, info: Info };
+        });
+    }
     UserSignUp(userInfo) {
         return __awaiter(this, void 0, void 0, function* () {
             if (userInfo.password === userInfo.passwordCheck) {
@@ -44,8 +64,8 @@ class database_connection {
                     email: userInfo.email,
                     password: userInfo.password
                 };
-                let uid = yield (0, prisma_1.SignUp)(UserData);
-                return uid;
+                let NewUserInfo = yield (0, prisma_1.SignUp)(UserData);
+                return NewUserInfo.id;
             }
             else {
                 return false;
