@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import cors from "cors";
 import database_connection from "./databasing/interfacing";
 import {
-  Service,
   BaseUserType,
   isBaseUser,
   UserType,
@@ -38,17 +37,17 @@ api.get("/search", async function(req: any, res: any) {
         req.query.q.toLowerCase().replaceAll("%20", " ")
       );
     } else {
-      results = [""];
+      results = [{ id: "", name: "" }];
     }
-    const returnData: Service<any> = {
-      status: "loaded",
-      payload: results
+    const returnData: ApiResponse<{ id: string; name: string }[]> = {
+      successful: true,
+      data: results
     };
     res.send(returnData);
   } catch (e) {
-    const returnData: Service<any> = {
-      status: "loaded",
-      payload: [""]
+    const returnData: ApiResponse<{ id: string; name: string }[]> = {
+      successful: true,
+      data: [{ id: "", name: "" }]
     };
     res.send(returnData);
   }
