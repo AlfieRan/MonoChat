@@ -8,7 +8,8 @@ import {
   VerifyLoginDetails,
   isChatPublic,
   GetChatMessages,
-  GetChatInfo
+  GetChatInfo,
+  GetMessageInfo
 } from "./prisma";
 import { BaseUserType, UserType, LoginType } from "../types";
 
@@ -36,8 +37,8 @@ class database_connection {
 
   async GetMessagesFromChat(ChatId: string) {
     if (await isChatPublic(ChatId)) {
-      const messages = await GetChatMessages(ChatId);
-      return { successful: true, messages: messages };
+      const msgs = await GetChatMessages(ChatId);
+      return { successful: true, messages: msgs.messages };
     } else {
       return { successful: false, error: "Chat is not public" };
     }
@@ -50,6 +51,15 @@ class database_connection {
 
     const Info = await GetChatInfo(ChatId);
     return { successful: true, info: Info };
+  }
+
+  async CollectMessageInfo(MessageId: string) {
+    try {
+      const Info = await GetMessageInfo(MessageId);
+      return { successful: true, info: Info };
+    } catch (e) {
+      return { successful: false, error: e };
+    }
   }
 
   async UserSignUp(userInfo: BaseUserType) {

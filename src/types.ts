@@ -18,6 +18,18 @@ export type Service<T> =
   | ServiceLoaded<T>
   | ServiceError;
 
+export type ApiResponse<T> = SuccessResponse<T> | ErrorResponse;
+
+export interface SuccessResponse<T> {
+  successful: true;
+  data: T;
+}
+
+export interface ErrorResponse {
+  successful: false;
+  error: string;
+}
+
 export type BaseUserType = {
   name: string;
   email: string;

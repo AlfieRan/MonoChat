@@ -78,8 +78,8 @@ export async function GetChatMessages(ChatId: string) {
     where: { id: ChatId },
     select: {
       messages: {
-        orderBy: { createdAt: "desc" },
-        select: { id: true, content: true, createdAt: true, userId: true },
+        orderBy: { createdAt: "asc" },
+        select: { id: true },
         take: 50
       }
     }
@@ -92,6 +92,14 @@ export async function GetChatInfo(ChatId: string) {
   const info = await prisma.chat.findUnique({
     where: { id: ChatId },
     select: { chatname: true, memberIds: true }
+  });
+  return info;
+}
+
+export async function GetMessageInfo(MsgId: string) {
+  const info = await prisma.message.findUnique({
+    where: { id: MsgId },
+    select: { content: true, userId: true, createdAt: true }
   });
   return info;
 }

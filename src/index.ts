@@ -7,7 +7,8 @@ import {
   BaseUserType,
   isBaseUser,
   UserType,
-  LoginType
+  LoginType,
+  ApiResponse
 } from "./types";
 
 dotenv.config();
@@ -151,26 +152,60 @@ api.post("/signin", async (req: any, res: any) => {
 });
 
 api.get("/chats/messages", async (req: any, res: any) => {
+  let error: { happened: boolean; err: string } = { happened: false, err: "" };
   try {
     if (req.query.id != undefined) {
       const connection = new database_connection();
-      let messages = connection.GetMessagesFromChat(req.query.id);
-      res.send({ successful: true, messages: messages });
+      const result = await connection.GetMessagesFromChat(req.query.id);
+      if (result.successful) {
+        let msgs: string[] = [];
+        result.messages.forEach(item => {
+          msgs.push(item.id);
+        });
+        res.send({ successful: true, data: { messages: msgs } });
+      } else {
+        error = { happened: true, err: result.error };
+      }
     } else {
-      res.send({ successful: false, error: "no id supplied" });
+      error = { happened: true, err: "no id supplied" };
     }
   } catch (e) {
-    res.send({ successful: false, error: e });
+    error = { happened: true, err: e };
+  }
+  if (error.happened) {
+    res.send({ successful: false, error: error });
   }
 });
 
 api.get("/chats/info", async (req: any, res: any) => {
+  let error: { happened: boolean; err: string } = { happened: false, err: "" };
   try {
     if (req.query.id != undefined) {
       const connection = new database_connection();
       let results = await connection.CollectChatInfo(req.query.id); // hello
       if (results.successful) {
-        res.send({ successful: true, info: results.info });
+        res.send({ successful: true, data: results.info });
+      } else {
+        error = { happened: true, err: results.error };
+      }
+    } else {
+      error = { happened: true, err: "no id supplied" };
+    }
+  } catch (e) {
+    error = { happened: true, err: e };
+  }
+  if (error.happened) {
+    res.send({ successful: false, error: error });
+  }
+});
+
+api.get("/message/info", async (req: any, res: any) => {
+  try {
+    if (req.query.id != undefined) {
+      const connection = new database_connection();
+      let results = await connection.CollectMessageInfo(req.query.id); // hello
+      if (results.successful) {
+        res.send({ successful: true, data: results.info });
       } else {
         res.send({ successful: false, error: results.error });
       }
