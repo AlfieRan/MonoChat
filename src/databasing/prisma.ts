@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { UserType, LoginType } from "../types";
 import { hash, verify } from "argon2";
-import { mainModule } from "process";
 const prisma = new PrismaClient();
 
 export async function UserSearch(search: string) {
@@ -78,7 +77,7 @@ export async function GetChatMessages(ChatId: string) {
     where: { id: ChatId },
     select: {
       messages: {
-        orderBy: { createdAt: "asc" },
+        orderBy: { createdAt: "desc" },
         select: { id: true },
         take: 50
       }
@@ -86,6 +85,26 @@ export async function GetChatMessages(ChatId: string) {
   });
 
   return messages;
+}
+
+export async function SendMessage(
+  Contents: string,
+  UserId: string,
+  ChatId: string
+) {
+  const msg = await prisma.message.create({
+    data: {
+      content: Contents,
+      sender: {
+        connect: {
+          id: UserId
+        }
+      },
+      chat: { connect: { id: ChatId } }
+    }
+  });
+
+  return msg.id;
 }
 
 export async function GetChatInfo(ChatId: string) {
@@ -102,29 +121,6 @@ export async function GetMessageInfo(MsgId: string) {
     select: { content: true, userId: true, createdAt: true }
   });
   return info;
-}
-
-export async function sendMessage(
-  ChatId: string,
-  UserId: string,
-  content: string
-) {
-  try {
-    await prisma.chat.update({
-      where: { id: ChatId },
-      data: {
-        messages: {
-          create: {
-            content: content,
-            sender: { connect: { id: UserId } }
-          }
-        }
-      }
-    });
-    return { successful: true };
-  } catch (e) {
-    return { successful: false, error: e };
-  }
 }
 
 export async function isChatPublic(ChatId: string) {

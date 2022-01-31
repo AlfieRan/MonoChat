@@ -7,7 +7,7 @@
     "bart": "yarn build && yarn start",
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node-dev src/index.ts --no-error",
+    "dev": "ts-node-dev src/index.ts --exit-child",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {

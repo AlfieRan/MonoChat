@@ -34,8 +34,8 @@ model Message {
   id        String   @id @default(uuid())
   content   String
   createdAt DateTime @default(now())
-  sender    User     @relation(fields: [userId], references: [id])
-  chat      Chat?    @relation(fields: [chatId], references: [id])
-  chatId    String?
   userId    String
+  sender    User     @relation(fields: [userId], references: [id])
+  chatId    String
+  chat      Chat    @relation(fields: [chatId], references: [id])
 }

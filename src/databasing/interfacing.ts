@@ -9,11 +9,17 @@ import {
   isChatPublic,
   GetChatMessages,
   GetChatInfo,
-  GetMessageInfo
+  GetMessageInfo,
+  SendMessage
 } from "./prisma";
 import { BaseUserType, UserType, LoginType } from "../types";
 
 class database_connection {
+  async NewMessage(contents: string, userId: string, chatId: string) {
+    const MsgId = SendMessage(contents, userId, chatId);
+    return MsgId;
+  }
+
   async Search(request: string) {
     let matches = await UserSearch(request).catch(e => {
       throw e;

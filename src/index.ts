@@ -23,7 +23,7 @@ api.get("/", (req: any, res: any) => {
   res.send("This is the MonoChat Api, if you're not a dev go away!");
 });
 
-api.get("/search", async function(req: any, res: any) {
+api.get("/search", async function(req, res: any) {
   try {
     const connection = new database_connection();
     let results;
@@ -33,9 +33,7 @@ api.get("/search", async function(req: any, res: any) {
       req.query.q != " " &&
       req.query.q != "%20"
     ) {
-      results = await connection.Search(
-        req.query.q.toLowerCase().replaceAll("%20", " ")
-      );
+      results = await connection.Search((req.query.q as string).toLowerCase());
     } else {
       results = [{ id: "", name: "" }];
     }
@@ -53,12 +51,12 @@ api.get("/search", async function(req: any, res: any) {
   }
 });
 
-api.get("/user", async function(req: any, res: any) {
+api.get("/user", async function(req, res: any) {
   try {
     const connection = new database_connection();
     let results;
     if (req.query.q != null) {
-      results = await connection.GetUserInfo(req.query.q);
+      results = await connection.GetUserInfo(req.query.q as string);
     } else {
       results = [""];
     }
@@ -81,7 +79,7 @@ api.get("/user", async function(req: any, res: any) {
   }
 });
 
-api.post("/signup", async (req: any, res: any) => {
+api.post("/signup", async (req, res: any) => {
   try {
     if (req.body === undefined || req.body === null) {
       res.send({ successful: false, error: "Body Undefined" });
@@ -113,12 +111,12 @@ api.post("/signup", async (req: any, res: any) => {
   }
 });
 
-api.get("/users/check", async (req: any, res: any) => {
+api.get("/users/check", async (req, res: any) => {
   try {
     if (req.query.email === undefined || req.query.email === null) {
       res.send({ successful: false, error: "No Email Supplied." });
     } else {
-      const ReqEmail = req.query.email;
+      const ReqEmail = req.query.email as string;
       const connection = new database_connection();
 
       let UserExists = await connection.DoesUserExist(ReqEmail);
@@ -129,7 +127,7 @@ api.get("/users/check", async (req: any, res: any) => {
   }
 });
 
-api.post("/signin", async (req: any, res: any) => {
+api.post("/signin", async (req, res: any) => {
   try {
     if (req.body.email != undefined && req.body.email != undefined) {
       const connection = new database_connection();
@@ -150,12 +148,14 @@ api.post("/signin", async (req: any, res: any) => {
   }
 });
 
-api.get("/chats/messages", async (req: any, res: any) => {
+api.get("/chats/messages", async (req, res: any) => {
   let error: { happened: boolean; err: string } = { happened: false, err: "" };
   try {
     if (req.query.id != undefined) {
       const connection = new database_connection();
-      const result = await connection.GetMessagesFromChat(req.query.id);
+      const result = await connection.GetMessagesFromChat(
+        req.query.id as string
+      );
       if (result.successful) {
         let msgs: string[] = [];
         result.messages.forEach(item => {
@@ -176,12 +176,12 @@ api.get("/chats/messages", async (req: any, res: any) => {
   }
 });
 
-api.get("/chats/info", async (req: any, res: any) => {
+api.get("/chats/info", async (req, res: any) => {
   let error: { happened: boolean; err: string } = { happened: false, err: "" };
   try {
     if (req.query.id != undefined) {
       const connection = new database_connection();
-      let results = await connection.CollectChatInfo(req.query.id); // hello
+      let results = await connection.CollectChatInfo(req.query.id as string); // hello
       if (results.successful) {
         res.send({ successful: true, data: results.info });
       } else {
@@ -194,15 +194,15 @@ api.get("/chats/info", async (req: any, res: any) => {
     error = { happened: true, err: e };
   }
   if (error.happened) {
-    res.send({ successful: false, error: error });
+    res.send({ successful: false, error: error.err });
   }
 });
 
-api.get("/message/info", async (req: any, res: any) => {
+api.get("/message/info", async (req, res: any) => {
   try {
     if (req.query.id != undefined) {
       const connection = new database_connection();
-      let results = await connection.CollectMessageInfo(req.query.id); // hello
+      let results = await connection.CollectMessageInfo(req.query.id as string); // hello
       if (results.successful) {
         res.send({ successful: true, data: results.info });
       } else {
@@ -212,6 +212,29 @@ api.get("/message/info", async (req: any, res: any) => {
       res.send({ successful: false, error: "no id supplied" });
     }
   } catch (e) {
+    res.send({ successful: false, error: e });
+  }
+});
+
+api.post("/message/send", async (req, res: any) => {
+  try {
+    if (
+      req.body.msgcontents != null &&
+      req.body.senderId != null &&
+      req.body.chatId != null
+    ) {
+      const connection = new database_connection();
+      const NewMsgId = await connection.NewMessage(
+        req.body.msgcontents as string,
+        req.body.senderId as string,
+        req.body.chatId as string
+      );
+      res.send({ successful: true, data: { MsgId: NewMsgId } });
+    } else {
+      res.send({ successful: false, error: "Not all data sent" });
+    }
+  } catch (e) {
+    console.log(e);
     res.send({ successful: false, error: e });
   }
 });
