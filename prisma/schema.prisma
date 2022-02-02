@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,25 +8,26 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  createdAt DateTime  @default(now())
-  name  String
-  email     String    @unique
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  name        String
+  email       String    @unique
   description String
   nationality String
-  password  String
-  chatids  String[]
-  friendids String[]
-  messages  Message[]
+  password    String
+  chats       Chat[]
+  following  User[]    @relation("UserFollows", references: [id])
+  followers   User[]    @relation("UserFollows", references: [id])
+  messages    Message[]
 }
 
 model Chat {
   id        String    @id @default(uuid())
   createdAt DateTime  @default(now())
-  memberIds String[]
+  members   User[]
   messages  Message[]
-  chatname String
-  ispublic Boolean
+  chatname  String
+  ispublic  Boolean
 }
 
 model Message {
@@ -35,7 +35,7 @@ model Message {
   content   String
   createdAt DateTime @default(now())
   userId    String
-  sender    User     @relation(fields: [userId], references: [id])
-  chatId    String
-  chat      Chat    @relation(fields: [chatId], references: [id])
+  sender    User     @relation(fields: userId, references: id)
+  chatid    String
+  chat      Chat     @relation(fields: chatid, references: id)
 }

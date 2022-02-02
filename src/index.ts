@@ -5,10 +5,12 @@ import database_connection from "./databasing/interfacing";
 import {
   BaseUserType,
   isBaseUser,
-  UserType,
   LoginType,
-  ApiResponse
+  ApiResponse,
+  MessageInfo
 } from "./types";
+import { generateCookie, getSession } from "./session";
+import dayjs from "dayjs";
 
 dotenv.config();
 
@@ -16,7 +18,19 @@ const api = express();
 
 const port = process.env.PORT;
 
-api.use(cors());
+api.use(
+  cors({
+    origin: [
+      "localhost:3000",
+      "http://localhost:3000",
+      "https://monochat.app",
+      "https://www.monochat.app"
+    ],
+    credentials: true
+  })
+);
+
+// api.use(cors());
 api.use(express.json()); // for parsing application/json
 // define a route handler for the default home page
 api.get("/", (req: any, res: any) => {
@@ -135,8 +149,18 @@ api.post("/signin", async (req, res: any) => {
         email: req.body.email,
         password: req.body.password
       };
-      if (await connection.UserSignIn(SignInData)) {
-        res.send({ successful: true });
+      const dbRes = await connection.UserSignIn(SignInData);
+      if (dbRes.successful) {
+        const UsrAuthCode = dbRes.data.AuthCode;
+        const cookie = generateCookie(
+          UsrAuthCode,
+          dayjs()
+            .add(1, "month")
+            .toDate()
+        );
+        // res.setHeader("Set-Cookie", cookie);
+        res.cookie(cookie);
+        res.json({ successful: true });
       } else {
         res.send({ successful: false, error: "Incorrect Login Details" });
       }
@@ -157,11 +181,7 @@ api.get("/chats/messages", async (req, res: any) => {
         req.query.id as string
       );
       if (result.successful) {
-        let msgs: string[] = [];
-        result.messages.forEach(item => {
-          msgs.push(item.id);
-        });
-        res.send({ successful: true, data: { messages: msgs } });
+        res.send({ successful: true, data: { messages: result.messages } });
       } else {
         error = { happened: true, err: result.error };
       }
@@ -172,7 +192,7 @@ api.get("/chats/messages", async (req, res: any) => {
     error = { happened: true, err: e };
   }
   if (error.happened) {
-    res.send({ successful: false, error: error });
+    res.send({ successful: false, error: error.err });
   }
 });
 
@@ -198,43 +218,44 @@ api.get("/chats/info", async (req, res: any) => {
   }
 });
 
-api.get("/message/info", async (req, res: any) => {
-  try {
-    if (req.query.id != undefined) {
-      const connection = new database_connection();
-      let results = await connection.CollectMessageInfo(req.query.id as string); // hello
-      if (results.successful) {
-        res.send({ successful: true, data: results.info });
-      } else {
-        res.send({ successful: false, error: results.error });
-      }
-    } else {
-      res.send({ successful: false, error: "no id supplied" });
-    }
-  } catch (e) {
-    res.send({ successful: false, error: e });
-  }
-});
+// api.get("/message/info", async (req, res: any) => {
+//   try {
+//     if (req.query.id != undefined) {
+//       const connection = new database_connection();
+//       let results = await connection.CollectMessageInfo(req.query.id as string); // hello
+//       if (results.successful) {
+//         res.send({ successful: true, data: results.info });
+//       } else {
+//         res.send({ successful: false, error: results.error });
+//       }
+//     } else {
+//       res.send({ successful: false, error: "no id supplied" });
+//     }
+//   } catch (e) {
+//     res.send({ successful: false, error: e });
+//   }
+// });
 
 api.post("/message/send", async (req, res: any) => {
   try {
+    // const UserId = await getSession(req);
     if (
       req.body.msgcontents != null &&
       req.body.senderId != null &&
+      // req.body.senderId == UserId &&
       req.body.chatId != null
     ) {
       const connection = new database_connection();
-      const NewMsgId = await connection.NewMessage(
+      const NewMsg = await connection.NewMessage(
         req.body.msgcontents as string,
         req.body.senderId as string,
         req.body.chatId as string
       );
-      res.send({ successful: true, data: { MsgId: NewMsgId } });
+      res.send({ successful: true, data: { Msg: NewMsg } });
     } else {
       res.send({ successful: false, error: "Not all data sent" });
     }
   } catch (e) {
-    console.log(e);
     res.send({ successful: false, error: e });
   }
 });

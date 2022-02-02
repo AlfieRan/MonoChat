@@ -13,11 +13,13 @@ import {
   SendMessage
 } from "./prisma";
 import { BaseUserType, UserType, LoginType } from "../types";
+import { redis, wrapRedis } from "./redis";
+import { getAccessToken } from "../jwtmoment";
 
 class database_connection {
   async NewMessage(contents: string, userId: string, chatId: string) {
-    const MsgId = SendMessage(contents, userId, chatId);
-    return MsgId;
+    const Msg = SendMessage(contents, userId, chatId);
+    return Msg;
   }
 
   async Search(request: string) {
@@ -83,10 +85,13 @@ class database_connection {
   }
 
   async UserSignIn(userInfo: LoginType) {
-    if (await VerifyLoginDetails(userInfo)) {
-      return true;
+    const usrStatus = await VerifyLoginDetails(userInfo);
+    if (usrStatus.successful) {
+      const Auth = await getAccessToken(usrStatus.id);
+      await redis.set(`session:${Auth}`, usrStatus.id, "ex", 30 * 60 * 60 * 24);
+      return { successful: true, data: { AuthCode: Auth } };
     } else {
-      return false;
+      return { successful: false, error: "Incorrect Login Details" };
     }
   }
 }

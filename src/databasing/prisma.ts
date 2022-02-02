@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { UserType, LoginType } from "../types";
+import { UserType, LoginType, MessageInfo } from "../types";
 import { hash, verify } from "argon2";
 const prisma = new PrismaClient();
 
@@ -34,6 +34,46 @@ export async function UserInfo(usrId: string) {
   return UserInfo;
 }
 
+export async function GetUserFriends(userId: string) {
+  const usrData = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { following: true, followers: true }
+  });
+
+  let friends: any[] = [];
+  let TmpA: any[];
+  let TmpB: any[];
+
+  if (usrData.following.length < usrData.followers.length) {
+    TmpA = usrData.following;
+    TmpB = usrData.followers;
+  } else {
+    TmpB = usrData.following;
+    TmpA = usrData.followers;
+  }
+
+  for (let i = 0; i < TmpA.length; i++) {
+    if (TmpA[i] in TmpB) {
+      friends.push(TmpA[i]);
+    }
+  }
+
+  return friends;
+}
+
+export async function FollowUser(userId: string, userToFollow: string) {
+  const data = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      following: {
+        connect: {
+          id: userToFollow
+        }
+      }
+    }
+  });
+}
+
 export async function DoesUserExist_Email(email: string) {
   const matchCount = await prisma.user.count({ where: { email: email } });
   if (matchCount > 0) {
@@ -50,10 +90,9 @@ export async function VerifyLoginDetails(LoginInfo: LoginType) {
     }
   });
   if (await verify(usrDetails.password, LoginInfo.password)) {
-    // TODO do some funky login info retaining shit, rn it doesn't do anything lol
-    return true;
+    return { successful: true, id: usrDetails.id };
   } else {
-    return false;
+    return { successful: false, error: "Incorrect Login Information" };
   }
 }
 
@@ -78,7 +117,11 @@ export async function GetChatMessages(ChatId: string) {
     select: {
       messages: {
         orderBy: { createdAt: "desc" },
-        select: { id: true },
+        select: {
+          id: true,
+          content: true,
+          sender: { select: { name: true, id: true } }
+        },
         take: 50
       }
     }
@@ -92,7 +135,7 @@ export async function SendMessage(
   UserId: string,
   ChatId: string
 ) {
-  const msg = await prisma.message.create({
+  const msg: MessageInfo = await prisma.message.create({
     data: {
       content: Contents,
       sender: {
@@ -101,16 +144,21 @@ export async function SendMessage(
         }
       },
       chat: { connect: { id: ChatId } }
+    },
+    select: {
+      id: true,
+      content: true,
+      sender: { select: { id: true, name: true } }
     }
   });
 
-  return msg.id;
+  return msg;
 }
 
 export async function GetChatInfo(ChatId: string) {
   const info = await prisma.chat.findUnique({
     where: { id: ChatId },
-    select: { chatname: true, memberIds: true }
+    select: { chatname: true, members: { select: { id: true, name: true } } }
   });
   return info;
 }
@@ -139,5 +187,3 @@ export async function isChatPublic(ChatId: string) {
     return false;
   }
 }
-
-// (async () => await UserSearch("something"))() Wyatt wrote this

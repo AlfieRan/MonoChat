@@ -28,6 +28,12 @@ export type LoginType = {
   password: string;
 };
 
+export type MessageInfo = {
+  id: string;
+  content: string;
+  sender: { id: string; name: string };
+};
+
 export function isBaseUser(object: any): object is BaseUserType {
   return true;
 }
