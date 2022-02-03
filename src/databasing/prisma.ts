@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { UserType, LoginType, MessageInfo } from "../types";
 import { hash, verify } from "argon2";
-const prisma = new PrismaClient();
+export const prisma = new PrismaClient();
 
 export async function UserSearch(search: string) {
   //TODO fix this

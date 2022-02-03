@@ -12,6 +12,8 @@ export async function wrapRedis<T>(
   const cached = await redis.get(key);
   if (cached) return JSON.parse(cached);
   const recent = await fn();
+
   await redis.set(key, JSON.stringify(recent), "ex", seconds);
+
   return recent;
 }
