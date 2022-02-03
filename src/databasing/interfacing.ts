@@ -88,7 +88,7 @@ class database_connection {
     const usrStatus = await VerifyLoginDetails(userInfo);
     if (usrStatus.successful) {
       const Auth = await getAccessToken(usrStatus.id);
-      await redis.set(`session:${Auth}`, usrStatus.id, "ex", 30 * 60 * 60 * 24);
+      // await redis.set(`session:${Auth}`, usrStatus.id, "ex", 30 * 60 * 60 * 24);
       return { successful: true, data: { AuthCode: Auth } };
     } else {
       return { successful: false, error: "Incorrect Login Details" };

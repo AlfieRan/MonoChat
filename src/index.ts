@@ -153,14 +153,14 @@ api.post("/signin", async (req, res: any) => {
       };
       const dbRes = await connection.UserSignIn(SignInData);
       if (dbRes.successful) {
-        const UsrAuthCode = dbRes.data.AuthCode;
-        const cookie = generateCookie(
-          UsrAuthCode,
-          dayjs()
-            .add(1, "month")
-            .toDate()
-        );
-        res.cookie(cookie);
+        // const UsrAuthCode = dbRes.data.AuthCode;
+        // const cookie = generateCookie(
+        //   UsrAuthCode,
+        //   dayjs()
+        //     .add(1, "month")
+        //     .toDate()
+        // );
+        // res.cookie(cookie);
         res.json({ successful: true });
       } else {
         res.send({ successful: false, error: "Incorrect Login Details" });
@@ -263,7 +263,7 @@ api.post("/message/send", async (req, res: any) => {
 
 (async () => {
   await prisma.$connect();
-  await redis.connect();
+  // await redis.connect();
   api.listen(port || 8888, () => {
     console.log(`server started at http://localhost:${port}`);
   });

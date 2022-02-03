@@ -17,10 +17,20 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
 const interfacing_1 = __importDefault(require("./databasing/interfacing"));
 const types_1 = require("./types");
+const prisma_1 = require("./databasing/prisma");
 dotenv_1.default.config();
 const api = (0, express_1.default)();
 const port = process.env.PORT;
-api.use((0, cors_1.default)());
+api.use((0, cors_1.default)({
+    origin: [
+        "localhost:3000",
+        "http://localhost:3000",
+        "https://monochat.app",
+        "https://www.monochat.app"
+    ],
+    credentials: true
+}));
+// api.use(cors());
 api.use(express_1.default.json()); // for parsing application/json
 // define a route handler for the default home page
 api.get("/", (req, res) => {
@@ -35,21 +45,21 @@ api.get("/search", function (req, res) {
                 req.query.q != "" &&
                 req.query.q != " " &&
                 req.query.q != "%20") {
-                results = yield connection.Search(req.query.q.toLowerCase().replaceAll("%20", " "));
+                results = yield connection.Search(req.query.q.toLowerCase());
             }
             else {
-                results = [""];
+                results = [{ id: "", name: "" }];
             }
             const returnData = {
-                status: "loaded",
-                payload: results
+                successful: true,
+                data: results
             };
             res.send(returnData);
         }
         catch (e) {
             const returnData = {
-                status: "loaded",
-                payload: [""]
+                successful: true,
+                data: [{ id: "", name: "" }]
             };
             res.send(returnData);
         }
@@ -145,8 +155,17 @@ api.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 email: req.body.email,
                 password: req.body.password
             };
-            if (yield connection.UserSignIn(SignInData)) {
-                res.send({ successful: true });
+            const dbRes = yield connection.UserSignIn(SignInData);
+            if (dbRes.successful) {
+                // const UsrAuthCode = dbRes.data.AuthCode;
+                // const cookie = generateCookie(
+                //   UsrAuthCode,
+                //   dayjs()
+                //     .add(1, "month")
+                //     .toDate()
+                // );
+                // res.cookie(cookie);
+                res.json({ successful: true });
             }
             else {
                 res.send({ successful: false, error: "Incorrect Login Details" });
@@ -161,42 +180,97 @@ api.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 }));
 api.get("/chats/messages", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    let error = { happened: false, err: "" };
     try {
         if (req.query.id != undefined) {
             const connection = new interfacing_1.default();
-            let messages = connection.GetMessagesFromChat(req.query.id);
-            res.send({ successful: true, messages: messages });
+            const result = yield connection.GetMessagesFromChat(req.query.id);
+            if (result.successful) {
+                res.send({ successful: true, data: { messages: result.messages } });
+            }
+            else {
+                error = { happened: true, err: result.error };
+            }
         }
         else {
-            res.send({ successful: false, error: "no id supplied" });
+            error = { happened: true, err: "no id supplied" };
         }
     }
     catch (e) {
-        res.send({ successful: false, error: e });
+        error = { happened: true, err: e };
+    }
+    if (error.happened) {
+        res.send({ successful: false, error: error.err });
     }
 }));
 api.get("/chats/info", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    let error = { happened: false, err: "" };
     try {
         if (req.query.id != undefined) {
             const connection = new interfacing_1.default();
-            let results = yield connection.CollectChatInfo(req.query.id);
+            let results = yield connection.CollectChatInfo(req.query.id); // hello
             if (results.successful) {
-                res.send({ successful: true, info: results.info });
+                res.send({ successful: true, data: results.info });
             }
             else {
-                res.send({ successful: false, error: results.error });
+                error = { happened: true, err: results.error };
             }
         }
         else {
-            res.send({ successful: false, error: "no id supplied" });
+            error = { happened: true, err: "no id supplied" };
+        }
+    }
+    catch (e) {
+        error = { happened: true, err: e };
+    }
+    if (error.happened) {
+        res.send({ successful: false, error: error.err });
+    }
+}));
+// api.get("/message/info", async (req, res: any) => {
+//   try {
+//     if (req.query.id != undefined) {
+//       const connection = new database_connection();
+//       let results = await connection.CollectMessageInfo(req.query.id as string); // hello
+//       if (results.successful) {
+//         res.send({ successful: true, data: results.info });
+//       } else {
+//         res.send({ successful: false, error: results.error });
+//       }
+//     } else {
+//       res.send({ successful: false, error: "no id supplied" });
+//     }
+//   } catch (e) {
+//     res.send({ successful: false, error: e });
+//   }
+// });
+api.post("/message/send", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // const UserId = await getSession(req);
+        if (req.body.msgcontents != null &&
+            req.body.senderId != null &&
+            // req.body.senderId == UserId &&
+            req.body.chatId != null) {
+            const connection = new interfacing_1.default();
+            const NewMsg = yield connection.NewMessage(req.body.msgcontents, req.body.senderId, req.body.chatId);
+            res.send({ successful: true, data: { Msg: NewMsg } });
+        }
+        else {
+            res.send({ successful: false, error: "Not all data sent" });
         }
     }
     catch (e) {
         res.send({ successful: false, error: e });
     }
 }));
-// start the Express server
-api.listen(port || 8888, () => {
-    console.log(`server started at http://localhost:${port}`);
+(() => __awaiter(void 0, void 0, void 0, function* () {
+    yield prisma_1.prisma.$connect();
+    // await redis.connect();
+    api.listen(port || 8888, () => {
+        console.log(`server started at http://localhost:${port}`);
+    });
+}))().catch(e => {
+    console.error(e);
+    process.exit(1);
 });
 //# sourceMappingURL=index.js.map

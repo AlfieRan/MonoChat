@@ -11,7 +11,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 // import * as database from "./prisma";
 const prisma_1 = require("./prisma");
+const jwtmoment_1 = require("../jwtmoment");
 class database_connection {
+    NewMessage(contents, userId, chatId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const Msg = (0, prisma_1.SendMessage)(contents, userId, chatId);
+            return Msg;
+        });
+    }
     Search(request) {
         return __awaiter(this, void 0, void 0, function* () {
             let matches = yield (0, prisma_1.UserSearch)(request).catch(e => {
@@ -39,8 +46,8 @@ class database_connection {
     GetMessagesFromChat(ChatId) {
         return __awaiter(this, void 0, void 0, function* () {
             if (yield (0, prisma_1.isChatPublic)(ChatId)) {
-                const messages = yield (0, prisma_1.GetChatMessages)(ChatId);
-                return { successful: true, messages: messages };
+                const msgs = yield (0, prisma_1.GetChatMessages)(ChatId);
+                return { successful: true, messages: msgs.messages };
             }
             else {
                 return { successful: false, error: "Chat is not public" };
@@ -54,6 +61,17 @@ class database_connection {
                 return { successful: false, error: "Chat is not public" };
             const Info = yield (0, prisma_1.GetChatInfo)(ChatId);
             return { successful: true, info: Info };
+        });
+    }
+    CollectMessageInfo(MessageId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const Info = yield (0, prisma_1.GetMessageInfo)(MessageId);
+                return { successful: true, info: Info };
+            }
+            catch (e) {
+                return { successful: false, error: e };
+            }
         });
     }
     UserSignUp(userInfo) {
@@ -74,11 +92,14 @@ class database_connection {
     }
     UserSignIn(userInfo) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (yield (0, prisma_1.VerifyLoginDetails)(userInfo)) {
-                return true;
+            const usrStatus = yield (0, prisma_1.VerifyLoginDetails)(userInfo);
+            if (usrStatus.successful) {
+                const Auth = yield (0, jwtmoment_1.getAccessToken)(usrStatus.id);
+                // await redis.set(`session:${Auth}`, usrStatus.id, "ex", 30 * 60 * 60 * 24);
+                return { successful: true, data: { AuthCode: Auth } };
             }
             else {
-                return false;
+                return { successful: false, error: "Incorrect Login Details" };
             }
         });
     }
