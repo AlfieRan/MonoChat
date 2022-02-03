@@ -88,7 +88,19 @@ class database_connection {
     const usrStatus = await VerifyLoginDetails(userInfo);
     if (usrStatus.successful) {
       const Auth = await getAccessToken(usrStatus.id);
-      // await redis.set(`session:${Auth}`, usrStatus.id, "ex", 30 * 60 * 60 * 24);
+      try {
+        await redis.set(
+          `session:${Auth}`,
+          usrStatus.id,
+          "ex",
+          30 * 60 * 60 * 24
+        );
+      } catch {
+        return {
+          successful: false,
+          error: "Redis error, unable to set Auth code"
+        };
+      }
       return { successful: true, data: { AuthCode: Auth } };
     } else {
       return { successful: false, error: "Incorrect Login Details" };

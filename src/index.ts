@@ -153,23 +153,33 @@ api.post("/signin", async (req, res: any) => {
       };
       const dbRes = await connection.UserSignIn(SignInData);
       if (dbRes.successful) {
-        // const UsrAuthCode = dbRes.data.AuthCode;
-        // const cookie = generateCookie(
-        //   UsrAuthCode,
-        //   dayjs()
-        //     .add(1, "month")
-        //     .toDate()
-        // );
-        // res.cookie(cookie);
-        res.json({ successful: true });
+        try {
+          const UsrAuthCode = dbRes.data.AuthCode;
+          const cookie = generateCookie(
+            UsrAuthCode,
+            dayjs()
+              .add(1, "month")
+              .toDate()
+          );
+          res.cookie(cookie);
+          res.json({ successful: true });
+        } catch {
+          res.send({
+            successful: false,
+            error: "Failed to generate cookie/Redis error"
+          });
+        }
       } else {
-        res.send({ successful: false, error: "Incorrect Login Details" });
+        res.send({ successful: false, error: dbRes.error });
       }
     } else {
       res.send({ successful: false, error: "email and password not supplied" });
     }
   } catch (e) {
-    res.send({ successful: false, error: e });
+    res.send({
+      successful: false,
+      error: `some kind of generic error has happened: ${e}`
+    });
   }
 });
 
@@ -239,7 +249,7 @@ api.get("/chats/info", async (req, res: any) => {
 
 api.post("/message/send", async (req, res: any) => {
   try {
-    // const UserId = await getSession(req);
+    const UserId = await getSession(req);
     if (
       req.body.msgcontents != null &&
       req.body.senderId != null &&
@@ -263,7 +273,7 @@ api.post("/message/send", async (req, res: any) => {
 
 (async () => {
   await prisma.$connect();
-  // await redis.connect();
+  await redis.connect();
   api.listen(port || 8888, () => {
     console.log(`server started at http://localhost:${port}`);
   });
