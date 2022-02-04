@@ -13,6 +13,7 @@ import { generateCookie, getSession } from "./session";
 import dayjs from "dayjs";
 import { redis } from "./databasing/redis";
 import { prisma } from "./databasing/prisma";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ const api = express();
 
 const port = process.env.PORT;
 
+api.use(cookieParser());
 api.use(
   cors({
     origin: [
@@ -111,7 +113,19 @@ api.post("/signup", async (req, res: any) => {
           const connection = new database_connection();
           let data = await connection.UserSignUp(SignUpData);
           if (data != false) {
-            res.send({ successful: true, id: data });
+            const dbRes = await connection.UserSignIn({
+              email: SignUpData.email,
+              password: SignUpData.password
+            });
+            const UsrAuthCode = dbRes.data.AuthCode;
+            const cookie = generateCookie(
+              UsrAuthCode,
+              dayjs()
+                .add(1, "month")
+                .toDate()
+            );
+            res.cookie(cookie);
+            res.json({ successful: true, id: data });
           } else {
             res.send({ successful: false, error: "Databasing error" });
           }
@@ -161,7 +175,7 @@ api.post("/signin", async (req, res: any) => {
               .add(1, "month")
               .toDate()
           );
-          res.cookie(cookie);
+          res.setHeader("Set-Cookie", cookie);
           res.json({ successful: true });
         } catch {
           res.send({
@@ -250,24 +264,29 @@ api.get("/chats/info", async (req, res: any) => {
 api.post("/message/send", async (req, res: any) => {
   try {
     const UserId = await getSession(req);
-    if (
-      req.body.msgcontents != null &&
-      req.body.senderId != null &&
-      // req.body.senderId == UserId &&
-      req.body.chatId != null
-    ) {
-      const connection = new database_connection();
-      const NewMsg = await connection.NewMessage(
-        req.body.msgcontents as string,
-        req.body.senderId as string,
-        req.body.chatId as string
-      );
-      res.send({ successful: true, data: { Msg: NewMsg } });
+    if (UserId.successful) {
+      if (req.body.msgcontents != null && req.body.chatId != null) {
+        const connection = new database_connection();
+        const NewMsg = await connection.NewMessage(
+          req.body.msgcontents as string,
+          UserId.data,
+          req.body.chatId as string
+        );
+        res.send({ successful: true, data: { Msg: NewMsg } });
+      } else {
+        res.send({ successful: false, error: "Not all data sent" });
+      }
     } else {
-      res.send({ successful: false, error: "Not all data sent" });
+      res.send({
+        successful: false,
+        error: UserId.data
+      });
     }
   } catch (e) {
-    res.send({ successful: false, error: e });
+    res.send({
+      successful: false,
+      error: `Some kind of error has occoured: ${e}`
+    });
   }
 });
 
