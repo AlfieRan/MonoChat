@@ -187,3 +187,15 @@ export async function isChatPublic(ChatId: string) {
     return false;
   }
 }
+
+export async function GetUserChats(Userid: string) {
+  const UserChats = await prisma.user.findUnique({
+    where: {
+      id: Userid
+    },
+    select: {
+      chats: { select: { chatname: true, id: true } }
+    }
+  });
+  return UserChats;
+}

@@ -261,7 +261,7 @@ api.get("/chats/info", async (req, res: any) => {
 //   }
 // });
 
-api.post("/message/send", async (req, res: any) => {
+api.post("/message/send", async (req, res) => {
   try {
     const UserId = await getSession(req);
     if (UserId.successful) {
@@ -287,6 +287,21 @@ api.post("/message/send", async (req, res: any) => {
       successful: false,
       error: `Some kind of error has occoured: ${e}`
     });
+  }
+});
+
+api.get("/user/get/chats", async (req, res) => {
+  try {
+    const UserId = await getSession(req);
+    if (UserId.successful) {
+      const connection = new database_connection();
+      const UserChats = await connection.getUserChats(UserId.data);
+      res.send(UserChats);
+    } else {
+      res.send({ successful: false, error: UserId.data });
+    }
+  } catch (e) {
+    res.send({ successful: false, error: `Generic Error: ${e}` });
   }
 });
 

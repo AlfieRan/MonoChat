@@ -10,7 +10,8 @@ import {
   GetChatMessages,
   GetChatInfo,
   GetMessageInfo,
-  SendMessage
+  SendMessage,
+  GetUserChats
 } from "./prisma";
 import { BaseUserType, UserType, LoginType } from "../types";
 import { redis, wrapRedis } from "./redis";
@@ -104,6 +105,19 @@ class database_connection {
       return { successful: true, data: { AuthCode: Auth } };
     } else {
       return { successful: false, error: "Incorrect Login Details" };
+    }
+  }
+
+  async getUserChats(userid: string) {
+    try {
+      const usrChats = await wrapRedis(
+        `usrChats-${userid}`,
+        () => GetUserChats(userid),
+        60 * 10
+      );
+      return { successful: true, data: usrChats };
+    } catch (e) {
+      return { successful: false, error: `Generic Error: ${e}` };
     }
   }
 }
