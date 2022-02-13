@@ -37,3 +37,13 @@ export type MessageInfo = {
 export function isBaseUser(object: any): object is BaseUserType {
   return true;
 }
+
+export type UserLogging = UserIsLogging | UserIsntLogging;
+
+interface UserIsLogging {
+  logged: true;
+  name: string;
+}
+interface UserIsntLogging {
+  logged: false;
+}

@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 // import * as database from "./prisma";
 const prisma_1 = require("./prisma");
+const redis_1 = require("./redis");
 const jwtmoment_1 = require("../jwtmoment");
 class database_connection {
     NewMessage(contents, userId, chatId) {
@@ -95,11 +96,30 @@ class database_connection {
             const usrStatus = yield (0, prisma_1.VerifyLoginDetails)(userInfo);
             if (usrStatus.successful) {
                 const Auth = yield (0, jwtmoment_1.getAccessToken)(usrStatus.id);
-                // await redis.set(`session:${Auth}`, usrStatus.id, "ex", 30 * 60 * 60 * 24);
+                try {
+                    yield redis_1.redis.set(`session:${Auth}`, usrStatus.id, "ex", 30 * 60 * 60 * 24);
+                }
+                catch (_a) {
+                    return {
+                        successful: false,
+                        error: "Redis error, unable to set Auth code"
+                    };
+                }
                 return { successful: true, data: { AuthCode: Auth } };
             }
             else {
                 return { successful: false, error: "Incorrect Login Details" };
+            }
+        });
+    }
+    getUserChats(userid) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const usrChats = yield (0, redis_1.wrapRedis)(`usrChats-${userid}`, () => (0, prisma_1.GetUserChats)(userid), 60 * 10);
+                return { successful: true, data: usrChats };
+            }
+            catch (e) {
+                return { successful: false, error: `Generic Error: ${e}` };
             }
         });
     }

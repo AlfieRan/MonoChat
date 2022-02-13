@@ -29,14 +29,18 @@ export function sessionKeyFromRequest(
 }
 
 export function generateCookie(key: string, expires: Date) {
+  const isLocal = process.env.LOCAL as string;
+  let security = true
+
+  if (isLocal === "true"){
+    security = false
+  }
+
   return serialize(cookieName, key, {
     httpOnly: true,
-    sameSite: "none",
-    // secure: process.env.NODE_ENV !== "development",
-    secure: true,
+    sameSite: "strict",
+    secure: security,
     path: "/",
-    // sameSite: "strict",
-    // sameSite: false,
     expires
   });
 }

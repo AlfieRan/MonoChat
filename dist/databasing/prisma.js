@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isChatPublic = exports.GetMessageInfo = exports.GetChatInfo = exports.SendMessage = exports.GetChatMessages = exports.SignUp = exports.VerifyLoginDetails = exports.DoesUserExist_Email = exports.FollowUser = exports.GetUserFriends = exports.UserInfo = exports.UserSearch = exports.prisma = void 0;
+exports.GetUserChats = exports.isChatPublic = exports.GetMessageInfo = exports.GetChatInfo = exports.SendMessage = exports.GetChatMessages = exports.SignUp = exports.VerifyLoginDetails = exports.DoesUserExist_Email = exports.FollowUser = exports.GetUserFriends = exports.UserInfo = exports.UserSearch = exports.prisma = void 0;
 const client_1 = require("@prisma/client");
 const argon2_1 = require("argon2");
 exports.prisma = new client_1.PrismaClient();
@@ -214,4 +214,18 @@ function isChatPublic(ChatId) {
     });
 }
 exports.isChatPublic = isChatPublic;
+function GetUserChats(Userid) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const UserChats = yield exports.prisma.user.findUnique({
+            where: {
+                id: Userid
+            },
+            select: {
+                chats: { select: { chatname: true, id: true } }
+            }
+        });
+        return UserChats;
+    });
+}
+exports.GetUserChats = GetUserChats;
 //# sourceMappingURL=prisma.js.map

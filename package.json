@@ -11,7 +11,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
-    "node": "17.0.1"
+    "node": ">= 17.0.1"
   },
   "repository": "https://github.com/AlfieRan/MonoChat.git",
   "author": "AlfieRan <89932058+AlfieRan@users.noreply.github.com>",
@@ -41,6 +41,7 @@
   "devDependencies": {
     "@types/cookie-parser": "^1.4.2",
     "@types/cors": "^2.8.12",
+    "prettier": "2.5.1",
     "prisma": "^3.8.0",
     "typescript": "^4.5.2"
   },

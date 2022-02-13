@@ -17,18 +17,25 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
 const interfacing_1 = __importDefault(require("./databasing/interfacing"));
 const types_1 = require("./types");
+const session_1 = require("./session");
+const dayjs_1 = __importDefault(require("dayjs"));
+const redis_1 = require("./databasing/redis");
 const prisma_1 = require("./databasing/prisma");
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 dotenv_1.default.config();
 const api = (0, express_1.default)();
 const port = process.env.PORT;
+api.use((0, cookie_parser_1.default)());
 api.use((0, cors_1.default)({
     origin: [
         "localhost:3000",
         "http://localhost:3000",
+        "http://localhost.com",
+        "http://localhost.com:3000",
         "https://monochat.app",
-        "https://www.monochat.app"
+        "https://www.monochat.app",
     ],
-    credentials: true
+    credentials: true,
 }));
 // api.use(cors());
 api.use(express_1.default.json()); // for parsing application/json
@@ -52,14 +59,14 @@ api.get("/search", function (req, res) {
             }
             const returnData = {
                 successful: true,
-                data: results
+                data: results,
             };
             res.send(returnData);
         }
         catch (e) {
             const returnData = {
                 successful: true,
-                data: [{ id: "", name: "" }]
+                data: [{ id: "", name: "" }],
             };
             res.send(returnData);
         }
@@ -79,14 +86,14 @@ api.get("/user", function (req, res) {
             if (results != null && results != [""]) {
                 const returnData = {
                     successful: true,
-                    payload: results
+                    payload: results,
                 };
                 res.send(returnData);
             }
             else {
                 const returnData = {
                     successful: false,
-                    error: "no user found"
+                    error: "no user found",
                 };
                 res.send(returnData);
             }
@@ -112,7 +119,14 @@ api.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                     const connection = new interfacing_1.default();
                     let data = yield connection.UserSignUp(SignUpData);
                     if (data != false) {
-                        res.send({ successful: true, id: data });
+                        const dbRes = yield connection.UserSignIn({
+                            email: SignUpData.email,
+                            password: SignUpData.password,
+                        });
+                        const UsrAuthCode = dbRes.data.AuthCode;
+                        const cookie = (0, session_1.generateCookie)(UsrAuthCode, (0, dayjs_1.default)().add(1, "month").toDate());
+                        res.setHeader("Set-Cookie", cookie);
+                        res.json({ successful: true, id: data });
                     }
                     else {
                         res.send({ successful: false, error: "Databasing error" });
@@ -128,6 +142,7 @@ api.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         }
     }
     catch (e) {
+        console.log(`Error Occoured: ${e}`);
         res.send({ successful: false, error: e });
     }
 }));
@@ -153,22 +168,25 @@ api.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             const connection = new interfacing_1.default();
             const SignInData = {
                 email: req.body.email,
-                password: req.body.password
+                password: req.body.password,
             };
             const dbRes = yield connection.UserSignIn(SignInData);
             if (dbRes.successful) {
-                // const UsrAuthCode = dbRes.data.AuthCode;
-                // const cookie = generateCookie(
-                //   UsrAuthCode,
-                //   dayjs()
-                //     .add(1, "month")
-                //     .toDate()
-                // );
-                // res.cookie(cookie);
-                res.json({ successful: true });
+                try {
+                    const UsrAuthCode = dbRes.data.AuthCode;
+                    const cookie = (0, session_1.generateCookie)(UsrAuthCode, (0, dayjs_1.default)().add(1, "month").toDate());
+                    res.setHeader("Set-Cookie", cookie);
+                    res.json({ successful: true });
+                }
+                catch (_a) {
+                    res.send({
+                        successful: false,
+                        error: "Failed to generate cookie/Redis error",
+                    });
+                }
             }
             else {
-                res.send({ successful: false, error: "Incorrect Login Details" });
+                res.send({ successful: false, error: dbRes.error });
             }
         }
         else {
@@ -176,7 +194,10 @@ api.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         }
     }
     catch (e) {
-        res.send({ successful: false, error: e });
+        res.send({
+            successful: false,
+            error: `some kind of generic error has happened: ${e}`,
+        });
     }
 }));
 api.get("/chats/messages", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -227,49 +248,74 @@ api.get("/chats/info", (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.send({ successful: false, error: error.err });
     }
 }));
-// api.get("/message/info", async (req, res: any) => {
-//   try {
-//     if (req.query.id != undefined) {
-//       const connection = new database_connection();
-//       let results = await connection.CollectMessageInfo(req.query.id as string); // hello
-//       if (results.successful) {
-//         res.send({ successful: true, data: results.info });
-//       } else {
-//         res.send({ successful: false, error: results.error });
-//       }
-//     } else {
-//       res.send({ successful: false, error: "no id supplied" });
-//     }
-//   } catch (e) {
-//     res.send({ successful: false, error: e });
-//   }
-// });
 api.post("/message/send", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // const UserId = await getSession(req);
-        if (req.body.msgcontents != null &&
-            req.body.senderId != null &&
-            // req.body.senderId == UserId &&
-            req.body.chatId != null) {
-            const connection = new interfacing_1.default();
-            const NewMsg = yield connection.NewMessage(req.body.msgcontents, req.body.senderId, req.body.chatId);
-            res.send({ successful: true, data: { Msg: NewMsg } });
+        const UserId = yield (0, session_1.getSession)(req);
+        if (UserId.successful) {
+            if (req.body.msgcontents != null && req.body.chatId != null) {
+                const connection = new interfacing_1.default();
+                const NewMsg = yield connection.NewMessage(req.body.msgcontents, UserId.data, req.body.chatId);
+                res.send({ successful: true, data: { Msg: NewMsg } });
+            }
+            else {
+                res.send({ successful: false, error: "Not all data sent" });
+            }
         }
         else {
-            res.send({ successful: false, error: "Not all data sent" });
+            res.send({
+                successful: false,
+                error: UserId.data,
+            });
         }
     }
     catch (e) {
-        res.send({ successful: false, error: e });
+        res.send({
+            successful: false,
+            error: `Some kind of error has occoured: ${e}`,
+        });
+    }
+}));
+api.get("/user/get/chats", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const UserId = yield (0, session_1.getSession)(req);
+        if (UserId.successful) {
+            const connection = new interfacing_1.default();
+            const UserChats = yield connection.getUserChats(UserId.data);
+            res.send(UserChats);
+        }
+        else {
+            res.send({ successful: false, error: UserId.data });
+        }
+    }
+    catch (e) {
+        res.send({ successful: false, error: `Generic Error: ${e}` });
+    }
+}));
+api.get("/user/checkAuth", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const UserId = yield (0, session_1.getSession)(req);
+        if (UserId.successful) {
+            const dbConnection = new interfacing_1.default();
+            const userName = (yield dbConnection.GetUserInfo(UserId.data)).name.split(" ")[0];
+            const data = { logged: true, name: userName };
+            res.send({ successful: true, data: data });
+        }
+        else {
+            const data = { logged: false };
+            res.send({ successful: true, data: data });
+        }
+    }
+    catch (e) {
+        res.send({ successful: false, error: `Generic Error: ${e}` });
     }
 }));
 (() => __awaiter(void 0, void 0, void 0, function* () {
     yield prisma_1.prisma.$connect();
-    // await redis.connect();
+    yield redis_1.redis.connect();
     api.listen(port || 8888, () => {
         console.log(`server started at http://localhost:${port}`);
     });
-}))().catch(e => {
+}))().catch((e) => {
     console.error(e);
     process.exit(1);
 });
