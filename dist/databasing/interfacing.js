@@ -22,7 +22,7 @@ class database_connection {
     }
     Search(request) {
         return __awaiter(this, void 0, void 0, function* () {
-            let matches = yield (0, prisma_1.UserSearch)(request).catch(e => {
+            let matches = yield (0, prisma_1.UserSearch)(request).catch((e) => {
                 throw e;
             });
             return matches;
@@ -30,17 +30,23 @@ class database_connection {
     }
     GetUserInfo(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            let Info = yield (0, prisma_1.UserInfo)(user).catch(e => {
+            let Info = yield (0, prisma_1.UserInfo)(user).catch((e) => {
                 throw e;
             });
             return Info;
         });
     }
-    DoesUserExist(email) {
+    DoesUserExistEmail(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            let result = yield (0, prisma_1.DoesUserExist_Email)(email).catch(e => {
+            let result = yield (0, prisma_1.DoesUserExist_Email)(email).catch((e) => {
                 throw e;
             });
+            return result;
+        });
+    }
+    DoesUserExistId(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield (0, prisma_1.DoesUserExist_Id)(id);
             return result;
         });
     }
@@ -81,7 +87,7 @@ class database_connection {
                 let UserData = {
                     name: userInfo.name,
                     email: userInfo.email,
-                    password: userInfo.password
+                    password: userInfo.password,
                 };
                 let NewUserInfo = yield (0, prisma_1.SignUp)(UserData);
                 return NewUserInfo.id;
@@ -102,7 +108,7 @@ class database_connection {
                 catch (_a) {
                     return {
                         successful: false,
-                        error: "Redis error, unable to set Auth code"
+                        error: "Redis error, unable to set Auth code",
                     };
                 }
                 return { successful: true, data: { AuthCode: Auth } };
@@ -117,6 +123,17 @@ class database_connection {
             try {
                 const usrChats = yield (0, redis_1.wrapRedis)(`usrChats-${userid}`, () => (0, prisma_1.GetUserChats)(userid), 60 * 10);
                 return { successful: true, data: usrChats };
+            }
+            catch (e) {
+                return { successful: false, error: `Generic Error: ${e}` };
+            }
+        });
+    }
+    getUsertoUserChat(userA, userB) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const chatId = yield (0, prisma_1.GetUserToUserChat)(userA, userB);
+                return { successful: true, data: chatId };
             }
             catch (e) {
                 return { successful: false, error: `Generic Error: ${e}` };

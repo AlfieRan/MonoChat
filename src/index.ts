@@ -151,7 +151,7 @@ api.get("/users/check", async (req, res) => {
       const ReqEmail = req.query.email as string;
       const connection = new database_connection();
 
-      let UserExists = await connection.DoesUserExist(ReqEmail);
+      let UserExists = await connection.DoesUserExistEmail(ReqEmail);
       res.send({ successful: true, exists: UserExists });
     }
   } catch (e) {
@@ -300,6 +300,31 @@ api.get("/user/checkAuth", async (req, res) => {
     } else {
       const data: UserLogging = { logged: false };
       res.send({ successful: true, data: data });
+    }
+  } catch (e) {
+    res.send({ successful: false, error: `Generic Error: ${e}` });
+  }
+});
+
+api.get("/chats/info/usertouser", async (req, res) => {
+  try {
+    const db = new database_connection();
+
+    const UserIdA = await getSession(req);
+    const UserIdB = req.query.id as string;
+
+    if (UserIdA.successful && (await db.DoesUserExistId(UserIdB))) {
+      const retChatId = await db.getUsertoUserChat(UserIdA.data, UserIdB);
+      if (retChatId.successful) {
+        res.send({ successful: true, data: retChatId.data });
+      } else {
+        res.send({
+          successful: false,
+          error: `Generic Error: ${retChatId.error}`,
+        });
+      }
+    } else {
+      res.send({ successful: false, error: "User not logged in" });
     }
   } catch (e) {
     res.send({ successful: false, error: `Generic Error: ${e}` });

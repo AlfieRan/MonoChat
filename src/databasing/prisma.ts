@@ -10,14 +10,14 @@ export async function UserSearch(search: string) {
     where: {
       name: {
         contains: name,
-        mode: "insensitive"
-      }
+        mode: "insensitive",
+      },
     },
     select: {
       id: true,
-      name: true
+      name: true,
     },
-    take: 5
+    take: 5,
   });
   return UserMatches;
 }
@@ -25,11 +25,11 @@ export async function UserSearch(search: string) {
 export async function UserInfo(usrId: string) {
   const UserInfo = await prisma.user.findUnique({
     where: {
-      id: usrId
+      id: usrId,
     },
     select: {
-      name: true
-    }
+      name: true,
+    },
   });
   return UserInfo;
 }
@@ -37,7 +37,7 @@ export async function UserInfo(usrId: string) {
 export async function GetUserFriends(userId: string) {
   const usrData = await prisma.user.findUnique({
     where: { id: userId },
-    select: { following: true, followers: true }
+    select: { following: true, followers: true },
   });
 
   let friends: any[] = [];
@@ -67,10 +67,10 @@ export async function FollowUser(userId: string, userToFollow: string) {
     data: {
       following: {
         connect: {
-          id: userToFollow
-        }
-      }
-    }
+          id: userToFollow,
+        },
+      },
+    },
   });
 }
 
@@ -83,11 +83,20 @@ export async function DoesUserExist_Email(email: string) {
   }
 }
 
+export async function DoesUserExist_Id(id: string) {
+  const matchCount = await prisma.user.count({ where: { id: id } });
+  if (matchCount > 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 export async function VerifyLoginDetails(LoginInfo: LoginType) {
   const usrDetails = await prisma.user.findUnique({
     where: {
-      email: LoginInfo.email
-    }
+      email: LoginInfo.email,
+    },
   });
   if (await verify(usrDetails.password, LoginInfo.password)) {
     return { successful: true, id: usrDetails.id };
@@ -104,8 +113,8 @@ export async function SignUp(UserInfo: UserType) {
       email: UserInfo.email,
       password: hashedPass,
       description: "",
-      nationality: ""
-    }
+      nationality: "",
+    },
   });
 
   return NewUser;
@@ -120,11 +129,11 @@ export async function GetChatMessages(ChatId: string) {
         select: {
           id: true,
           content: true,
-          sender: { select: { name: true, id: true } }
+          sender: { select: { name: true, id: true } },
         },
-        take: 50
-      }
-    }
+        take: 50,
+      },
+    },
   });
 
   return messages;
@@ -140,16 +149,16 @@ export async function SendMessage(
       content: Contents,
       sender: {
         connect: {
-          id: UserId
-        }
+          id: UserId,
+        },
       },
-      chat: { connect: { id: ChatId } }
+      chat: { connect: { id: ChatId } },
     },
     select: {
       id: true,
       content: true,
-      sender: { select: { id: true, name: true } }
-    }
+      sender: { select: { id: true, name: true } },
+    },
   });
 
   return msg;
@@ -158,7 +167,7 @@ export async function SendMessage(
 export async function GetChatInfo(ChatId: string) {
   const info = await prisma.chat.findUnique({
     where: { id: ChatId },
-    select: { chatname: true, members: { select: { id: true, name: true } } }
+    select: { chatname: true, members: { select: { id: true, name: true } } },
   });
   return info;
 }
@@ -166,7 +175,7 @@ export async function GetChatInfo(ChatId: string) {
 export async function GetMessageInfo(MsgId: string) {
   const info = await prisma.message.findUnique({
     where: { id: MsgId },
-    select: { content: true, userId: true, createdAt: true }
+    select: { content: true, userId: true, createdAt: true },
   });
   return info;
 }
@@ -174,11 +183,11 @@ export async function GetMessageInfo(MsgId: string) {
 export async function isChatPublic(ChatId: string) {
   const isPublic = await prisma.chat.findUnique({
     where: {
-      id: ChatId
+      id: ChatId,
     },
     select: {
-      ispublic: true
-    }
+      ispublic: true,
+    },
   });
 
   if (isPublic.ispublic) {
@@ -191,11 +200,63 @@ export async function isChatPublic(ChatId: string) {
 export async function GetUserChats(Userid: string) {
   const UserChats = await prisma.user.findUnique({
     where: {
-      id: Userid
+      id: Userid,
     },
     select: {
-      chats: { select: { chatname: true, id: true } }
-    }
+      chats: { select: { chatname: true, id: true } },
+    },
   });
   return UserChats;
+}
+
+export async function GetUserToUserChat(userAid: string, userBid: string) {
+  const MatchingChats = (
+    await prisma.user.findUnique({
+      where: {
+        id: userAid,
+      },
+      select: {
+        chats: {
+          where: { members: { some: { id: userBid } } },
+          select: { id: true, members: { select: { id: true } } },
+        },
+      },
+    })
+  ).chats;
+
+  for (let i = 0; i < MatchingChats.length; i++) {
+    if (MatchingChats[i].members.length === 2) {
+      return MatchingChats[i].id;
+    }
+  }
+
+  // This bit only runs if there wasn't a match previously, as that would've returned the function
+  const UserAName = (
+    await prisma.user.findUnique({
+      where: { id: userAid },
+      select: { name: true },
+    })
+  ).name;
+
+  const UserBName = (
+    await prisma.user.findUnique({
+      where: { id: userBid },
+      select: { name: true },
+    })
+  ).name;
+
+  const newChatId = (
+    await prisma.chat.create({
+      data: {
+        chatname: `${UserAName} and ${UserBName}`,
+        ispublic: false,
+        members: { connect: [{ id: userAid }, { id: userBid }] },
+      },
+      select: {
+        id: true,
+      },
+    })
+  ).id;
+
+  return newChatId;
 }

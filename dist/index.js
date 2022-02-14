@@ -154,7 +154,7 @@ api.get("/users/check", (req, res) => __awaiter(void 0, void 0, void 0, function
         else {
             const ReqEmail = req.query.email;
             const connection = new interfacing_1.default();
-            let UserExists = yield connection.DoesUserExist(ReqEmail);
+            let UserExists = yield connection.DoesUserExistEmail(ReqEmail);
             res.send({ successful: true, exists: UserExists });
         }
     }
@@ -303,6 +303,31 @@ api.get("/user/checkAuth", (req, res) => __awaiter(void 0, void 0, void 0, funct
         else {
             const data = { logged: false };
             res.send({ successful: true, data: data });
+        }
+    }
+    catch (e) {
+        res.send({ successful: false, error: `Generic Error: ${e}` });
+    }
+}));
+api.get("/chats/info/usertouser", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const db = new interfacing_1.default();
+        const UserIdA = yield (0, session_1.getSession)(req);
+        const UserIdB = req.query.id;
+        if (UserIdA.successful && (yield db.DoesUserExistId(UserIdB))) {
+            const retChatId = yield db.getUsertoUserChat(UserIdA.data, UserIdB);
+            if (retChatId.successful) {
+                res.send({ successful: true, data: retChatId.data });
+            }
+            else {
+                res.send({
+                    successful: false,
+                    error: `Generic Error: ${retChatId.error}`,
+                });
+            }
+        }
+        else {
+            res.send({ successful: false, error: "User not logged in" });
         }
     }
     catch (e) {

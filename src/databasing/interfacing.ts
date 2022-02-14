@@ -11,7 +11,9 @@ import {
   GetChatInfo,
   GetMessageInfo,
   SendMessage,
-  GetUserChats
+  GetUserChats,
+  GetUserToUserChat,
+  DoesUserExist_Id,
 } from "./prisma";
 import { BaseUserType, UserType, LoginType } from "../types";
 import { redis, wrapRedis } from "./redis";
@@ -24,23 +26,28 @@ class database_connection {
   }
 
   async Search(request: string) {
-    let matches = await UserSearch(request).catch(e => {
+    let matches = await UserSearch(request).catch((e) => {
       throw e;
     });
     return matches;
   }
 
   async GetUserInfo(user: string) {
-    let Info = await UserInfo(user).catch(e => {
+    let Info = await UserInfo(user).catch((e) => {
       throw e;
     });
     return Info;
   }
 
-  async DoesUserExist(email: string) {
-    let result = await DoesUserExist_Email(email).catch(e => {
+  async DoesUserExistEmail(email: string) {
+    let result = await DoesUserExist_Email(email).catch((e) => {
       throw e;
     });
+    return result;
+  }
+
+  async DoesUserExistId(id: string) {
+    const result = await DoesUserExist_Id(id);
     return result;
   }
 
@@ -76,7 +83,7 @@ class database_connection {
       let UserData: UserType = {
         name: userInfo.name,
         email: userInfo.email,
-        password: userInfo.password
+        password: userInfo.password,
       };
       let NewUserInfo = await SignUp(UserData);
       return NewUserInfo.id;
@@ -99,7 +106,7 @@ class database_connection {
       } catch {
         return {
           successful: false,
-          error: "Redis error, unable to set Auth code"
+          error: "Redis error, unable to set Auth code",
         };
       }
       return { successful: true, data: { AuthCode: Auth } };
@@ -116,6 +123,15 @@ class database_connection {
         60 * 10
       );
       return { successful: true, data: usrChats };
+    } catch (e) {
+      return { successful: false, error: `Generic Error: ${e}` };
+    }
+  }
+
+  async getUsertoUserChat(userA: string, userB: string) {
+    try {
+      const chatId = await GetUserToUserChat(userA, userB);
+      return { successful: true, data: chatId };
     } catch (e) {
       return { successful: false, error: `Generic Error: ${e}` };
     }

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetUserChats = exports.isChatPublic = exports.GetMessageInfo = exports.GetChatInfo = exports.SendMessage = exports.GetChatMessages = exports.SignUp = exports.VerifyLoginDetails = exports.DoesUserExist_Email = exports.FollowUser = exports.GetUserFriends = exports.UserInfo = exports.UserSearch = exports.prisma = void 0;
+exports.GetUserToUserChat = exports.GetUserChats = exports.isChatPublic = exports.GetMessageInfo = exports.GetChatInfo = exports.SendMessage = exports.GetChatMessages = exports.SignUp = exports.VerifyLoginDetails = exports.DoesUserExist_Id = exports.DoesUserExist_Email = exports.FollowUser = exports.GetUserFriends = exports.UserInfo = exports.UserSearch = exports.prisma = void 0;
 const client_1 = require("@prisma/client");
 const argon2_1 = require("argon2");
 exports.prisma = new client_1.PrismaClient();
@@ -21,14 +21,14 @@ function UserSearch(search) {
             where: {
                 name: {
                     contains: name,
-                    mode: "insensitive"
-                }
+                    mode: "insensitive",
+                },
             },
             select: {
                 id: true,
-                name: true
+                name: true,
             },
-            take: 5
+            take: 5,
         });
         return UserMatches;
     });
@@ -38,11 +38,11 @@ function UserInfo(usrId) {
     return __awaiter(this, void 0, void 0, function* () {
         const UserInfo = yield exports.prisma.user.findUnique({
             where: {
-                id: usrId
+                id: usrId,
             },
             select: {
-                name: true
-            }
+                name: true,
+            },
         });
         return UserInfo;
     });
@@ -52,7 +52,7 @@ function GetUserFriends(userId) {
     return __awaiter(this, void 0, void 0, function* () {
         const usrData = yield exports.prisma.user.findUnique({
             where: { id: userId },
-            select: { following: true, followers: true }
+            select: { following: true, followers: true },
         });
         let friends = [];
         let TmpA;
@@ -81,10 +81,10 @@ function FollowUser(userId, userToFollow) {
             data: {
                 following: {
                     connect: {
-                        id: userToFollow
-                    }
-                }
-            }
+                        id: userToFollow,
+                    },
+                },
+            },
         });
     });
 }
@@ -101,12 +101,24 @@ function DoesUserExist_Email(email) {
     });
 }
 exports.DoesUserExist_Email = DoesUserExist_Email;
+function DoesUserExist_Id(id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const matchCount = yield exports.prisma.user.count({ where: { id: id } });
+        if (matchCount > 0) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    });
+}
+exports.DoesUserExist_Id = DoesUserExist_Id;
 function VerifyLoginDetails(LoginInfo) {
     return __awaiter(this, void 0, void 0, function* () {
         const usrDetails = yield exports.prisma.user.findUnique({
             where: {
-                email: LoginInfo.email
-            }
+                email: LoginInfo.email,
+            },
         });
         if (yield (0, argon2_1.verify)(usrDetails.password, LoginInfo.password)) {
             return { successful: true, id: usrDetails.id };
@@ -126,8 +138,8 @@ function SignUp(UserInfo) {
                 email: UserInfo.email,
                 password: hashedPass,
                 description: "",
-                nationality: ""
-            }
+                nationality: "",
+            },
         });
         return NewUser;
     });
@@ -143,11 +155,11 @@ function GetChatMessages(ChatId) {
                     select: {
                         id: true,
                         content: true,
-                        sender: { select: { name: true, id: true } }
+                        sender: { select: { name: true, id: true } },
                     },
-                    take: 50
-                }
-            }
+                    take: 50,
+                },
+            },
         });
         return messages;
     });
@@ -160,16 +172,16 @@ function SendMessage(Contents, UserId, ChatId) {
                 content: Contents,
                 sender: {
                     connect: {
-                        id: UserId
-                    }
+                        id: UserId,
+                    },
                 },
-                chat: { connect: { id: ChatId } }
+                chat: { connect: { id: ChatId } },
             },
             select: {
                 id: true,
                 content: true,
-                sender: { select: { id: true, name: true } }
-            }
+                sender: { select: { id: true, name: true } },
+            },
         });
         return msg;
     });
@@ -179,7 +191,7 @@ function GetChatInfo(ChatId) {
     return __awaiter(this, void 0, void 0, function* () {
         const info = yield exports.prisma.chat.findUnique({
             where: { id: ChatId },
-            select: { chatname: true, members: { select: { id: true, name: true } } }
+            select: { chatname: true, members: { select: { id: true, name: true } } },
         });
         return info;
     });
@@ -189,7 +201,7 @@ function GetMessageInfo(MsgId) {
     return __awaiter(this, void 0, void 0, function* () {
         const info = yield exports.prisma.message.findUnique({
             where: { id: MsgId },
-            select: { content: true, userId: true, createdAt: true }
+            select: { content: true, userId: true, createdAt: true },
         });
         return info;
     });
@@ -199,11 +211,11 @@ function isChatPublic(ChatId) {
     return __awaiter(this, void 0, void 0, function* () {
         const isPublic = yield exports.prisma.chat.findUnique({
             where: {
-                id: ChatId
+                id: ChatId,
             },
             select: {
-                ispublic: true
-            }
+                ispublic: true,
+            },
         });
         if (isPublic.ispublic) {
             return true;
@@ -218,14 +230,55 @@ function GetUserChats(Userid) {
     return __awaiter(this, void 0, void 0, function* () {
         const UserChats = yield exports.prisma.user.findUnique({
             where: {
-                id: Userid
+                id: Userid,
             },
             select: {
-                chats: { select: { chatname: true, id: true } }
-            }
+                chats: { select: { chatname: true, id: true } },
+            },
         });
         return UserChats;
     });
 }
 exports.GetUserChats = GetUserChats;
+function GetUserToUserChat(userAid, userBid) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const MatchingChats = (yield exports.prisma.user.findUnique({
+            where: {
+                id: userAid,
+            },
+            select: {
+                chats: {
+                    where: { members: { some: { id: userBid } } },
+                    select: { id: true, members: { select: { id: true } } },
+                },
+            },
+        })).chats;
+        for (let i = 0; i < MatchingChats.length; i++) {
+            if (MatchingChats[i].members.length === 2) {
+                return MatchingChats[i].id;
+            }
+        }
+        // This bit only runs if there wasn't a match previously, as that would've returned the function
+        const UserAName = (yield exports.prisma.user.findUnique({
+            where: { id: userAid },
+            select: { name: true },
+        })).name;
+        const UserBName = (yield exports.prisma.user.findUnique({
+            where: { id: userBid },
+            select: { name: true },
+        })).name;
+        const newChatId = (yield exports.prisma.chat.create({
+            data: {
+                chatname: `${UserAName} and ${UserBName}`,
+                ispublic: false,
+                members: { connect: [{ id: userAid }, { id: userBid }] },
+            },
+            select: {
+                id: true,
+            },
+        })).id;
+        return newChatId;
+    });
+}
+exports.GetUserToUserChat = GetUserToUserChat;
 //# sourceMappingURL=prisma.js.map
