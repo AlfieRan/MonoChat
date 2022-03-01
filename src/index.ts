@@ -10,7 +10,12 @@ import {
   MessageInfo,
   UserLogging,
 } from "./types";
-import { generateCookie, getSession } from "./session";
+import {
+  generateCookie,
+  getSession,
+  revokeSession,
+  sessionKeyFromRequest,
+} from "./session";
 import dayjs from "dayjs";
 import { redis } from "./databasing/redis";
 import { prisma } from "./databasing/prisma";
@@ -329,6 +334,12 @@ api.get("/chats/info/usertouser", async (req, res) => {
   } catch (e) {
     res.send({ successful: false, error: `Generic Error: ${e}` });
   }
+});
+
+api.get("/logout", async (req, res) => {
+  await revokeSession(sessionKeyFromRequest(req).data);
+  res.setHeader("Set-Cookie", generateCookie("", new Date()));
+  res.send({ successful: true });
 });
 
 (async () => {

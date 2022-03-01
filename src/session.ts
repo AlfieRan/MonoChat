@@ -19,9 +19,10 @@ export async function getSession(
   }
 }
 
-export function sessionKeyFromRequest(
-  req: Request
-): { successful: boolean; data: string } {
+export function sessionKeyFromRequest(req: Request): {
+  successful: boolean;
+  data: string;
+} {
   if (!req.cookies[cookieName]) {
     return { successful: false, data: "You are not logged in" };
   }
@@ -30,10 +31,10 @@ export function sessionKeyFromRequest(
 
 export function generateCookie(key: string, expires: Date) {
   const isLocal = process.env.LOCAL as string;
-  let security = true
+  let security = true;
 
-  if (isLocal === "true"){
-    security = false
+  if (isLocal === "true") {
+    security = false;
   }
 
   return serialize(cookieName, key, {
@@ -41,6 +42,10 @@ export function generateCookie(key: string, expires: Date) {
     sameSite: "strict",
     secure: security,
     path: "/",
-    expires
+    expires,
   });
+}
+
+export async function revokeSession(key: string) {
+  await redis.del(`session:${key}`);
 }
