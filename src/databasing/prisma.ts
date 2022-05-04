@@ -92,6 +92,27 @@ export async function DoesUserExist_Id(id: string) {
   }
 }
 
+export async function isUserInChat(chatid: string, userid: string) {
+  const members = (
+    await prisma.chat.findUnique({
+      where: {
+        id: chatid,
+      },
+      select: {
+        members: { select: { id: true } },
+      },
+    })
+  ).members;
+
+  for (let i = 0; i < members.length; i++) {
+    if (userid === members[i].id) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export async function VerifyLoginDetails(LoginInfo: LoginType) {
   const usrDetails = await prisma.user.findUnique({
     where: {
@@ -203,10 +224,45 @@ export async function GetUserChats(Userid: string) {
       id: Userid,
     },
     select: {
-      chats: { select: { chatname: true, id: true } },
+      chats: {
+        select: { chatname: true, id: true, isdirect: true },
+      },
     },
   });
+
+  for (let i = 0; i < UserChats.chats.length; i++) {
+    if (UserChats.chats[i].isdirect) {
+      const otherUser = await GetOtherUserInDirect(
+        UserChats.chats[i].id,
+        Userid
+      );
+      UserChats.chats[i].chatname = otherUser;
+    }
+  }
+
   return UserChats;
+}
+
+async function GetOtherUserInDirect(chatid: string, userid: string) {
+  const members = await prisma.chat.findUnique({
+    where: {
+      id: chatid,
+    },
+    select: {
+      members: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (userid === members.members[0].id) {
+    return members.members[1].name;
+  } else {
+    return members.members[0].name;
+  }
 }
 
 export async function GetUserToUserChat(userAid: string, userBid: string) {
@@ -217,7 +273,7 @@ export async function GetUserToUserChat(userAid: string, userBid: string) {
       },
       select: {
         chats: {
-          where: { members: { some: { id: userBid } } },
+          where: { members: { some: { id: userBid } }, isdirect: true },
           select: { id: true, members: { select: { id: true } } },
         },
       },
@@ -251,6 +307,7 @@ export async function GetUserToUserChat(userAid: string, userBid: string) {
         chatname: `${UserAName} and ${UserBName}`,
         ispublic: false,
         members: { connect: [{ id: userAid }, { id: userBid }] },
+        isdirect: true,
       },
       select: {
         id: true,

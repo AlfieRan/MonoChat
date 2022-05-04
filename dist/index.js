@@ -204,8 +204,9 @@ api.get("/chats/messages", (req, res) => __awaiter(void 0, void 0, void 0, funct
     let error = { happened: false, err: "" };
     try {
         if (req.query.id != undefined) {
+            const userId = yield (0, session_1.getSession)(req);
             const connection = new interfacing_1.default();
-            const result = yield connection.GetMessagesFromChat(req.query.id);
+            const result = yield connection.GetMessagesFromChat(req.query.id, userId.data);
             if (result.successful) {
                 res.send({ successful: true, data: { messages: result.messages } });
             }
@@ -229,7 +230,8 @@ api.get("/chats/info", (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         if (req.query.id != undefined) {
             const connection = new interfacing_1.default();
-            let results = yield connection.CollectChatInfo(req.query.id); // hello
+            const UserId = yield (0, session_1.getSession)(req);
+            let results = yield connection.CollectChatInfo(req.query.id, UserId.data); // hello
             if (results.successful) {
                 res.send({ successful: true, data: results.info });
             }
@@ -333,6 +335,15 @@ api.get("/chats/info/usertouser", (req, res) => __awaiter(void 0, void 0, void 0
     catch (e) {
         res.send({ successful: false, error: `Generic Error: ${e}` });
     }
+}));
+api.get("/logout", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, session_1.revokeSession)((0, session_1.sessionKeyFromRequest)(req).data);
+    res.setHeader("Set-Cookie", (0, session_1.generateCookie)("", new Date()));
+    res.send({ successful: true });
+}));
+api.get("/getUserId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const UserId = yield (0, session_1.getSession)(req);
+    res.send(UserId);
 }));
 (() => __awaiter(void 0, void 0, void 0, function* () {
     yield prisma_1.prisma.$connect();

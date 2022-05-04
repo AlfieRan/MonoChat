@@ -14,6 +14,7 @@ import {
   GetUserChats,
   GetUserToUserChat,
   DoesUserExist_Id,
+  isUserInChat,
 } from "./prisma";
 import { BaseUserType, UserType, LoginType } from "../types";
 import { redis, wrapRedis } from "./redis";
@@ -51,8 +52,8 @@ class database_connection {
     return result;
   }
 
-  async GetMessagesFromChat(ChatId: string) {
-    if (await isChatPublic(ChatId)) {
+  async GetMessagesFromChat(ChatId: string, Userid: string) {
+    if ((await isChatPublic(ChatId)) || (await isUserInChat(ChatId, Userid))) {
       const msgs = await GetChatMessages(ChatId);
       return { successful: true, messages: msgs.messages };
     } else {
@@ -60,13 +61,15 @@ class database_connection {
     }
   }
 
-  async CollectChatInfo(ChatId: string) {
+  async CollectChatInfo(ChatId: string, UserId: string) {
     const chatIsPublic = await isChatPublic(ChatId);
-    if (!chatIsPublic)
+    const userIsInChat = await isUserInChat(ChatId, UserId);
+    if (userIsInChat || chatIsPublic) {
+      const Info = await GetChatInfo(ChatId);
+      return { successful: true, info: Info };
+    } else {
       return { successful: false, error: "Chat is not public" };
-
-    const Info = await GetChatInfo(ChatId);
-    return { successful: true, info: Info };
+    }
   }
 
   async CollectMessageInfo(MessageId: string) {
@@ -120,7 +123,7 @@ class database_connection {
       const usrChats = await wrapRedis(
         `usrChats-${userid}`,
         () => GetUserChats(userid),
-        60 * 10
+        60
       );
       return { successful: true, data: usrChats };
     } catch (e) {

@@ -50,9 +50,9 @@ class database_connection {
             return result;
         });
     }
-    GetMessagesFromChat(ChatId) {
+    GetMessagesFromChat(ChatId, Userid) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (yield (0, prisma_1.isChatPublic)(ChatId)) {
+            if ((yield (0, prisma_1.isChatPublic)(ChatId)) || (yield (0, prisma_1.isUserInChat)(ChatId, Userid))) {
                 const msgs = yield (0, prisma_1.GetChatMessages)(ChatId);
                 return { successful: true, messages: msgs.messages };
             }
@@ -61,13 +61,17 @@ class database_connection {
             }
         });
     }
-    CollectChatInfo(ChatId) {
+    CollectChatInfo(ChatId, UserId) {
         return __awaiter(this, void 0, void 0, function* () {
             const chatIsPublic = yield (0, prisma_1.isChatPublic)(ChatId);
-            if (!chatIsPublic)
+            const userIsInChat = yield (0, prisma_1.isUserInChat)(ChatId, UserId);
+            if (userIsInChat || chatIsPublic) {
+                const Info = yield (0, prisma_1.GetChatInfo)(ChatId);
+                return { successful: true, info: Info };
+            }
+            else {
                 return { successful: false, error: "Chat is not public" };
-            const Info = yield (0, prisma_1.GetChatInfo)(ChatId);
-            return { successful: true, info: Info };
+            }
         });
     }
     CollectMessageInfo(MessageId) {

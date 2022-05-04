@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetUserToUserChat = exports.GetUserChats = exports.isChatPublic = exports.GetMessageInfo = exports.GetChatInfo = exports.SendMessage = exports.GetChatMessages = exports.SignUp = exports.VerifyLoginDetails = exports.DoesUserExist_Id = exports.DoesUserExist_Email = exports.FollowUser = exports.GetUserFriends = exports.UserInfo = exports.UserSearch = exports.prisma = void 0;
+exports.GetUserToUserChat = exports.GetUserChats = exports.isChatPublic = exports.GetMessageInfo = exports.GetChatInfo = exports.SendMessage = exports.GetChatMessages = exports.SignUp = exports.VerifyLoginDetails = exports.isUserInChat = exports.DoesUserExist_Id = exports.DoesUserExist_Email = exports.FollowUser = exports.GetUserFriends = exports.UserInfo = exports.UserSearch = exports.prisma = void 0;
 const client_1 = require("@prisma/client");
 const argon2_1 = require("argon2");
 exports.prisma = new client_1.PrismaClient();
@@ -113,6 +113,25 @@ function DoesUserExist_Id(id) {
     });
 }
 exports.DoesUserExist_Id = DoesUserExist_Id;
+function isUserInChat(chatid, userid) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const members = (yield exports.prisma.chat.findUnique({
+            where: {
+                id: chatid,
+            },
+            select: {
+                members: { select: { id: true } },
+            },
+        })).members;
+        for (let i = 0; i < members.length; i++) {
+            if (userid === members[i].id) {
+                return true;
+            }
+        }
+        return false;
+    });
+}
+exports.isUserInChat = isUserInChat;
 function VerifyLoginDetails(LoginInfo) {
     return __awaiter(this, void 0, void 0, function* () {
         const usrDetails = yield exports.prisma.user.findUnique({
@@ -248,7 +267,7 @@ function GetUserToUserChat(userAid, userBid) {
             },
             select: {
                 chats: {
-                    where: { members: { some: { id: userBid } } },
+                    where: { members: { some: { id: userBid } }, isdirect: true },
                     select: { id: true, members: { select: { id: true } } },
                 },
             },
@@ -272,6 +291,7 @@ function GetUserToUserChat(userAid, userBid) {
                 chatname: `${UserAName} and ${UserBName}`,
                 ispublic: false,
                 members: { connect: [{ id: userAid }, { id: userBid }] },
+                isdirect: true,
             },
             select: {
                 id: true,

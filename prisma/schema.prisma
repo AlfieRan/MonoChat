@@ -28,6 +28,7 @@ model Chat {
   messages  Message[]
   chatname  String
   ispublic  Boolean
+  isdirect  Boolean   @default(false) // for differentiating direct messages and group chats
 }
 
 model Message {

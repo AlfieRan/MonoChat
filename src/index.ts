@@ -90,7 +90,7 @@ api.get("/user", async function (req, res) {
     if (results != null && results != [""]) {
       const returnData = {
         successful: true,
-        payload: results,
+        data: results,
       };
       res.send(returnData);
     } else {
@@ -206,9 +206,11 @@ api.get("/chats/messages", async (req, res) => {
   let error: { happened: boolean; err: string } = { happened: false, err: "" };
   try {
     if (req.query.id != undefined) {
+      const userId = await getSession(req);
       const connection = new database_connection();
       const result = await connection.GetMessagesFromChat(
-        req.query.id as string
+        req.query.id as string,
+        userId.data
       );
       if (result.successful) {
         res.send({ successful: true, data: { messages: result.messages } });
@@ -231,7 +233,11 @@ api.get("/chats/info", async (req, res) => {
   try {
     if (req.query.id != undefined) {
       const connection = new database_connection();
-      let results = await connection.CollectChatInfo(req.query.id as string); // hello
+      const UserId = await getSession(req);
+      let results = await connection.CollectChatInfo(
+        req.query.id as string,
+        UserId.data
+      ); // hello
       if (results.successful) {
         res.send({ successful: true, data: results.info });
       } else {
@@ -340,6 +346,11 @@ api.get("/logout", async (req, res) => {
   await revokeSession(sessionKeyFromRequest(req).data);
   res.setHeader("Set-Cookie", generateCookie("", new Date()));
   res.send({ successful: true });
+});
+
+api.get("/getUserId", async (req, res) => {
+  const UserId = await getSession(req);
+  res.send(UserId);
 });
 
 (async () => {
